@@ -16,7 +16,7 @@ GREY = "#CCCCCC"
 
 @st.cache_data
 def load_history():
-    parquet_path = os.path.join(os.path.dirname(__file__), "..", "data", "douro_climate.parquet")
+    parquet_path = os.path.join(os.path.dirname(__file__), "..", "data", "processed", "douro_climate.parquet")
     if os.path.exists(parquet_path):
         return pd.read_parquet(parquet_path)
     # Synthetic fallback — label clearly

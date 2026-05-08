@@ -5,3 +5,8 @@ pyarrow==19.0.1
 joblib==1.4.2
 scikit-learn==1.5.2
 numpy==2.2.5
+requests==2.32.3
+python-dateutil==2.9.0.post0
+tqdm==4.67.1
+matplotlib==3.10.1
+jupyter==1.1.1
