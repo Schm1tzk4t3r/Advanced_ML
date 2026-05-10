@@ -122,16 +122,16 @@ with col_scatter:
 
 with col_explain:
     st.markdown("""
-**O que é o risco de base?**
+**What is Basis Risk?**
 
-O risco de base ocorre quando o gatilho climático é ativado mas o agricultor não sofre perdas reais,
-ou quando o agricultor sofre perdas mas o gatilho não é ativado.
+Basis risk occurs when the climate trigger fires but the farmer doesn't suffer real losses,
+or when the farmer suffers losses but the trigger doesn't fire.
 
-VinhaGuard minimiza o risco de base calibrando os gatilhos com dados históricos de 30+ anos para
-cada sub-região do Douro.
+VinhaGuard minimises basis risk by calibrating triggers using 30+ years of historical data
+for each Douro sub-region.
 
-*Pontos vermelhos = anos em que o gatilho e as perdas coincidem (bom alinhamento).*
-*Pontos dourados = anos com risco de base.*
+*Red points = years where trigger and losses align (good match).*
+*Gold points = years with basis risk mismatch.*
 """)
 
 # Chart 4 – Premium Breakdown Donut

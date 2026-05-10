@@ -7,8 +7,7 @@ from model.predict import predict_risk_and_premium
 
 st.set_page_config(page_title="Risk Assessment – VinhaGuard", page_icon="🍷", layout="wide")
 
-st.title("Avaliação de Risco Climático")
-st.caption("Climate Risk Assessment")
+st.title("Climate Risk Assessment")
 st.markdown("---")
 
 SUBREGIONS = [

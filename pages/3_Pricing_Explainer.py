@@ -1,13 +1,13 @@
 import streamlit as st
 import plotly.graph_objects as go
 
-st.set_page_config(page_title="Pricing Explainer – VinhaGuard", page_icon="🍷", layout="wide")
+st.set_page_config(page_title="Pricing Explainer - VinhaGuard", page_icon="🍷", layout="wide")
 
 BURGUNDY = "#6B1C2E"
 GOLD = "#B8860B"
 
 st.title("Pricing Explainer")
-st.markdown("Como calculamos o seu prémio / How we calculate your premium")
+st.markdown("How we calculate your premium")
 st.markdown("---")
 
 st.markdown("""
@@ -15,7 +15,7 @@ st.markdown("""
 
 The annual premium is computed as:
 
-> **Premium = Insured Value × Risk Probability × Loss Given Trigger × (1 + Risk Loading) × (1 + Admin Margin)**
+> **Premium = Insured Value x Risk Probability x Loss Given Trigger x (1 + Risk Loading) x (1 + Admin Margin)**
 
 Where:
 - **Risk Probability** — output of the AI model for your subregion and risk type
@@ -68,7 +68,7 @@ climate data crosses a pre-agreed threshold, with **no adjuster, no paperwork, n
 | | Traditional Insurance | VinhaGuard (Parametric) |
 |---|---|---|
 | Trigger | Assessed farm loss | Objective climate data |
-| Payout time | Weeks–months | < 72 hours |
+| Payout time | Weeks-months | < 72 hours |
 | Transparency | Limited | Full (AI + data) |
 | Basis risk | Low | Present — disclosed |
 | Premium | High (overhead) | Actuarially priced |
