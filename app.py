@@ -36,7 +36,7 @@ with col2:
     st.caption("Triggered automatically when climate thresholds are met")
 
 with col3:
-    st.metric("AI Risk Model", "XGBoost + RF")
+    st.metric("AI Risk Model", "LogReg + RF")
     st.caption("Trained on 30+ years of Douro climate data")
 
 st.markdown("---")
