@@ -176,7 +176,7 @@ st.markdown("""
 # ── Key stats ─────────────────────────────────────────────────────────────────
 c1, c2, c3, c4 = st.columns(4)
 stats = [
-    ("6",      "Sub-regions Covered",   "Baixo Corgo to Vila Nova de Foz Côa"),
+    ("3 + 3",  "Risk Profiles + Demo Places", "Three IVDP profiles plus familiar locations"),
     ("< 72h",  "Payout Speed",          "Triggered by climate data"),
     ("30 +",   "Years of Data",         "Historical Douro climate records"),
     ("AI",     "Risk Modelling",        "Logistic Regression + Random Forest"),
@@ -222,7 +222,7 @@ with col_left:
 with col_right:
     st.markdown("""
     <div class="region-card">
-        <div class="title">Covered Sub-regions</div>
+        <div class="title">Risk profiles and demo locations</div>
         <div class="region-pill">📍 Baixo Corgo — Maritime influence</div>
         <div class="region-pill">📍 Cima Corgo — Historically challenging</div>
         <div class="region-pill">📍 Douro Superior — High elevation</div>

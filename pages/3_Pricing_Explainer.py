@@ -18,14 +18,14 @@ Our actuarial model is transparent and rule-based:
 st.markdown("""
 <div style="background: linear-gradient(135deg, #F5F5F5 0%, #FAFAFA 100%); padding: 25px; border-radius: 8px; border-left: 4px solid #6B1C2E;">
 
-**Premium = Expected Loss × (1 + Risk Loading) × (1 + Admin Margin)**
+**Premium = (Expected Payout + Risk Loading + Admin Cost) x (1 + Margin)**
 
 Where:
-- **Expected Loss** = Insured Value × Risk Probability × Historical Loss Rate
+- **Expected Payout** = Insured Value x Risk Probability x Loss Given Trigger
 - **Risk Probability** = AI model output (70% historical + 30% model blend)
-- **Historical Loss Rate** = % of crop lost when trigger fires (varies by risk type)
-- **Risk Loading** ≈ 25% (uncertainty buffer + reinsurance)
-- **Admin Margin** ≈ 15% (platform operations)
+- **Risk Loading** = uncertainty buffer + reinsurance loading
+- **Admin Cost** = EUR 50 platform fee + EUR 2 per hectare
+- **Margin** = 15% operating margin
 
 </div>
 """, unsafe_allow_html=True)
@@ -40,6 +40,7 @@ col1, col2, col3 = st.columns(3)
 
 with col1:
     insured_value = st.number_input("💰 Insured Value (€)", min_value=1_000, max_value=5_000_000, value=40_000, step=5_000)
+    area_ha = st.slider("Vineyard Area (ha)", min_value=1, max_value=500, value=12)
     risk_prob = st.slider("📊 Risk Probability (%)", min_value=0, max_value=100, value=62) / 100
     loss_given_trigger = st.slider("📉 Loss if Trigger Fires (%)", min_value=10, max_value=100, value=55) / 100
 
@@ -51,11 +52,14 @@ with col3:
     # Calculations
     expected_loss = insured_value * risk_prob * loss_given_trigger
     risk_load_amount = expected_loss * risk_loading
-    admin_amount = expected_loss * (1 + risk_loading) * admin_margin
-    premium = expected_loss * (1 + risk_loading) * (1 + admin_margin)
+    admin_cost = 50 + 2 * area_ha
+    subtotal = expected_loss + risk_load_amount + admin_cost
+    admin_amount = subtotal * admin_margin
+    premium = subtotal + admin_amount
 
     st.metric("Expected Loss", f"€{expected_loss:,.0f}", f"({risk_prob:.0%} × {loss_given_trigger:.0%} of value)")
     st.metric("+ Risk Loading", f"€{risk_load_amount:,.0f}")
+    st.metric("+ Admin Cost", f"€{admin_cost:,.0f}")
     st.metric("Final Premium", f"€{premium:,.0f}", f"{premium / insured_value:.1%} of value")
 
 st.markdown("---")
@@ -67,13 +71,13 @@ st.markdown("Follow the money from risk to your final premium:")
 fig = go.Figure(go.Waterfall(
     name="Premium Build-up",
     orientation="v",
-    measure=["relative", "relative", "relative", "total"],
-    x=["Expected Loss", "Risk Loading", "Admin Margin", "Your Annual Premium"],
-    y=[expected_loss, risk_load_amount, admin_amount, 0],
+    measure=["relative", "relative", "relative", "relative", "total"],
+    x=["Expected Loss", "Risk Loading", "Admin Cost", "Margin", "Your Annual Premium"],
+    y=[expected_loss, risk_load_amount, admin_cost, admin_amount, 0],
     connector={"line": {"color": BURGUNDY}},
     increasing={"marker": {"color": BURGUNDY}},
     totals={"marker": {"color": GOLD}},
-    text=[f"€{expected_loss:,.0f}", f"€{risk_load_amount:,.0f}", f"€{admin_amount:,.0f}", f"€{premium:,.0f}"],
+    text=[f"€{expected_loss:,.0f}", f"€{risk_load_amount:,.0f}", f"€{admin_cost:,.0f}", f"€{admin_amount:,.0f}", f"€{premium:,.0f}"],
     textposition="outside",
 ))
 fig.update_layout(title="Premium Build-up Waterfall", yaxis_title="€", height=450, hovermode="x unified")

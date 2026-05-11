@@ -33,6 +33,11 @@ SUBREGION_ALIASES = {
     "regua": "Baixo Corgo",
     "vila nova de foz coa": "Douro Superior",
 }
+DEMO_REGION_EXPLANATIONS = {
+    "pinhao": "Pinhao is shown as a familiar demo location and priced with the Cima Corgo risk profile.",
+    "regua": "Regua is shown as a familiar demo location and priced with the Baixo Corgo risk profile.",
+    "vila nova de foz coa": "Vila Nova de Foz Coa is shown as a familiar demo location and priced with the Douro Superior risk profile.",
+}
 
 
 @dataclass(frozen=True)
@@ -116,6 +121,19 @@ def _normalise_subregion(subregion: str) -> str:
     raise ValueError(
         f"Unknown subregion '{subregion}'. Expected one of: {', '.join(VALID_SUBREGIONS)}."
     )
+
+
+def _subregion_profile_note(input_subregion: str, canonical_subregion: str) -> str:
+    key = _ascii_key(str(input_subregion))
+    if key in DEMO_REGION_EXPLANATIONS:
+        return DEMO_REGION_EXPLANATIONS[key]
+    if key.startswith("pinh"):
+        return DEMO_REGION_EXPLANATIONS["pinhao"]
+    if key.startswith("reg") or key.startswith("rgua"):
+        return DEMO_REGION_EXPLANATIONS["regua"]
+    if "foz" in key and ("coa" in key or key.endswith("foz ca") or key.endswith("foz co")):
+        return DEMO_REGION_EXPLANATIONS["vila nova de foz coa"]
+    return f"Quote uses the {canonical_subregion} IVDP risk profile."
 
 
 def _normalise_risk_type(risk_type: str) -> str:
@@ -308,7 +326,10 @@ def predict_risk_and_premium(
             "drought": risk["drought_trigger_rate"],
             "combined": risk["combined_stress_rate"],
         },
+        "input_subregion": str(subregion),
         "subregion_used": canonical_subregion,
+        "risk_profile_note": _subregion_profile_note(str(subregion), canonical_subregion),
+        "is_demo_alias": _ascii_key(str(subregion)) not in {_ascii_key(s) for s in VALID_SUBREGIONS},
         "risk_type_used": canonical_risk,
         "n_historical_rows": int(len(sub_history)),
         "n_locations": int(sub_history["location_id"].nunique()),

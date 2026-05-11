@@ -62,6 +62,8 @@ Metrics:
 - `model/artifacts/feature_importance.csv`
 - `model/artifacts/scored_history.csv`
 
+`scored_history.csv` is also the data source for the current dashboard. This keeps the dashboard aligned with the same 960-row scored history that powers the ML backend instead of the older six-column demo parquet.
+
 Charts:
 
 - `docs/figures/ml_confusion_matrix.png`
@@ -123,7 +125,7 @@ Supported risk types:
 - `Drought`
 - `Both`
 
-For backward compatibility with the current app, legacy demo regions are mapped to the three IVDP regions:
+The model has three canonical IVDP risk profiles. For a friendlier demo, the UI also shows familiar place labels. These are mapped transparently to the three profiles:
 
 - `Pinhao` / `Pinhão` -> `Cima Corgo`
 - `Regua` / `Régua` -> `Baixo Corgo`

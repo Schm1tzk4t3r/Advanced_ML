@@ -108,6 +108,7 @@ if submitted:
         premium_eur = result["premium_eur"]
         trigger = result["trigger_threshold"]
         basis_risk = result["basis_risk_pct"]
+        pricing = result["pricing_breakdown"]
 
         # Risk gauge with color coding
         col_left, col_right = st.columns([1, 2])
@@ -139,6 +140,7 @@ if submitted:
             st.markdown("<div class='result-card'>", unsafe_allow_html=True)
             st.markdown(f"**Trigger Condition:**")
             st.markdown(f"> {trigger}")
+            st.caption(result["risk_profile_note"])
 
             col_a, col_b = st.columns(2)
             with col_a:
@@ -159,17 +161,25 @@ if submitted:
 
         # Breakdown
         st.subheader("💳 Premium Breakdown")
-        expected_payout = premium_eur * 0.60
-        risk_loading = premium_eur * 0.25
-        admin = premium_eur * 0.15
-
         breakdown_data = {
-            "Component": ["Expected Payout", "Risk Loading", "Admin & Reinsurance", "TOTAL"],
-            "Amount": [f"€{expected_payout:,.0f}", f"€{risk_loading:,.0f}", f"€{admin:,.0f}", f"€{premium_eur:,.0f}"],
-            "Share": ["60%", "25%", "15%", "100%"],
+            "Component": ["Expected Payout", "Risk Loading", "Admin Cost", "Margin", "TOTAL"],
+            "Amount": [
+                f"€{pricing['expected_payout_eur']:,.0f}",
+                f"€{pricing['risk_loading_eur']:,.0f}",
+                f"€{pricing['admin_eur']:,.0f}",
+                f"€{pricing['margin_eur']:,.0f}",
+                f"€{premium_eur:,.0f}",
+            ],
+            "Share": [
+                f"{pricing['expected_payout_eur'] / premium_eur:.0%}",
+                f"{pricing['risk_loading_eur'] / premium_eur:.0%}",
+                f"{pricing['admin_eur'] / premium_eur:.0%}",
+                f"{pricing['margin_eur'] / premium_eur:.0%}",
+                "100%",
+            ],
         }
 
         st.dataframe(breakdown_data, use_container_width=True, hide_index=True)
-        st.caption("💡 Expected Payout reflects the historical probability that the trigger fires and you receive a claim payout. Risk Loading covers model uncertainty and reinsurance. Admin covers platform operations.")
+        st.caption("Expected payout, risk loading, admin cost, and margin come directly from the ML pricing backend.")
 
         st.info("ℹ️ This quote is illustrative and based on the climate risk model. Actual premiums may vary based on reinsurance costs and market conditions.", icon="ℹ️")

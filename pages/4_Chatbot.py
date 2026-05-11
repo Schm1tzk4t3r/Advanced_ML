@@ -32,8 +32,8 @@ FAQ: dict[str, str] = {
         "Three steps:\n"
         "1. **Risk assessment** — AI model analyzes 30+ years of climate data for your region\n"
         "2. **Historical trigger rate** — how often does the trigger fire?\n"
-        "3. **Load & margin** — add 25% risk buffer + 15% admin costs\n\n"
-        "**Formula:** Premium = (Insured Value × Risk %) × (1 + Buffers)\n\n"
+        "3. **Load, admin cost, and margin** — add the uncertainty buffer, fixed platform cost, and margin\n\n"
+        "**Formula:** Premium = (Expected Payout + Risk Loading + Admin Cost) x (1 + Margin)\n\n"
         "See the **Pricing Explainer** page for an interactive calculator and full breakdown."
     ),
     "can i cancel": (
@@ -43,12 +43,13 @@ FAQ: dict[str, str] = {
         "No penalties, no lock-in. We only keep revenue for coverage you actually use."
     ),
     "which douro subregions are covered": (
-        "Currently 6 Douro sub-regions:\n"
-        "- **Baixo Corgo** — lower valley, maritime influence\n"
-        "- **Cima Corgo** — central, historically challenging\n"
-        "- **Douro Superior** — high elevation, coolest\n"
-        "- **Pinhão, Régua, Vila Nova de Foz Côa** — specialized microclimates\n\n"
-        "More regions coming in 2026–2027. Stay tuned!"
+        "The ML model currently uses **3 canonical IVDP risk profiles**:\n"
+        "- **Baixo Corgo**\n"
+        "- **Cima Corgo**\n"
+        "- **Douro Superior**\n\n"
+        "The demo also shows familiar place labels: **Pinhao**, **Regua**, and "
+        "**Vila Nova de Foz Coa**. These are transparently mapped to the closest "
+        "canonical IVDP profile for pricing."
     ),
     "what is a trigger": (
         "A trigger is the **objective climate condition** that activates automatic payment.\n\n"
