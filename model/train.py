@@ -46,8 +46,6 @@ ARTIFACT_DIR = REPO_ROOT / "model" / "artifacts"
 FIGURE_DIR = REPO_ROOT / "docs" / "figures"
 
 TARGET = "climate_stress_year"
-ID_COLUMNS = ["location_id"]
-DROP_COLUMNS = ID_COLUMNS + [TARGET]
 CATEGORICAL_FEATURES = ["subregion"]
 NUMERIC_FEATURES = [
     "elevation_m",
@@ -165,12 +163,6 @@ def metric_dict(y_true: pd.Series, y_prob: np.ndarray) -> dict[str, Any]:
 def get_feature_names(model: Pipeline) -> list[str]:
     preprocessor = model.named_steps["preprocess"]
     return list(preprocessor.get_feature_names_out())
-
-
-def transformed_frame(model: Pipeline, x: pd.DataFrame) -> pd.DataFrame:
-    preprocessor = model.named_steps["preprocess"]
-    arr = preprocessor.transform(x)
-    return pd.DataFrame(arr, columns=get_feature_names(model), index=x.index)
 
 
 def compute_feature_importance(model: Pipeline, x_test: pd.DataFrame, y_test: pd.Series) -> pd.DataFrame:

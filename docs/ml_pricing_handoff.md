@@ -2,7 +2,7 @@
 
 ## Scope
 
-This is the Person 3 deliverable for the Advanced Topics in Machine Learning project. It turns the data lead's climate dataset into:
+This document explains our ML and pricing work for the Advanced Topics in Machine Learning project. The goal was to turn the climate dataset into:
 
 - a trained climate-stress model;
 - evaluation metrics and charts;
@@ -10,7 +10,7 @@ This is the Person 3 deliverable for the Advanced Topics in Machine Learning pro
 - a deployable `predict_risk_and_premium()` backend;
 - a transparent premium formula.
 
-The implementation is intentionally explainable and reproducible. It uses scikit-learn models already supported by `requirements.txt`, avoiding a new XGBoost dependency that could break the demo environment.
+We kept the implementation explainable and reproducible. It uses scikit-learn models already supported by `requirements.txt`, avoiding a new XGBoost dependency that could make the demo harder to run.
 
 ## Dataset
 
@@ -37,7 +37,7 @@ Two models are trained:
 | Logistic Regression | Baseline | Standardized numeric features, one-hot subregion, class-balanced. |
 | Random Forest | Main model | Captures non-linear trigger interactions, class-balanced, shallow enough to avoid an opaque black box. |
 
-The deployable artifact is the Random Forest, saved as:
+The deployed artifact is the Random Forest, saved as:
 
 `model/artifacts/risk_model.joblib`
 
@@ -52,7 +52,7 @@ This is harder and more honest than a random split because the test set contains
 
 Important framing for the presentation:
 
-The model is best described as a **climate-trigger risk model**. Since the target itself is derived from weather indicators, the model demonstrates that the engineered indicators recover stress-year logic and can produce a calibrated risk score. At quote time, the app cannot know next season's weather, so the pricing backend estimates future trigger probability from historical climatology and elevation-weighted comparable sites.
+The model is best described as a **climate-trigger risk model**. Since the target itself is derived from weather indicators, the model demonstrates that the engineered indicators recover stress-year logic and can produce a useful risk score. At quote time, the app cannot know next season's weather, so the pricing backend estimates future trigger probability from historical climatology and elevation-weighted comparable sites.
 
 ## Generated Evaluation Artifacts
 
@@ -149,7 +149,7 @@ risk_probability = 0.70 * historical_trigger_rate
                  + 0.30 * model_stress_probability
 ```
 
-This gives a defensible estimate for quote pricing while keeping the AI component real and explainable.
+This gives us a defensible estimate for quote pricing while keeping the AI component real and explainable.
 
 ## Premium Formula
 

@@ -68,4 +68,6 @@ python -m model.train
 
 This trains the Logistic Regression baseline and Random Forest main model, writes `model/artifacts/risk_model.joblib`, exports metrics to `model/artifacts/metrics.json`, and creates evaluation charts in `docs/figures/`. The deployable `predict_risk_and_premium()` backend uses the trained model plus historical trigger rates to return risk probability, premium, basis-risk estimate, feature importance, and pricing breakdown.
 
-Reference doc: [`docs/ml_pricing_handoff.md`](docs/ml_pricing_handoff.md)
+Reference docs:
+- [`docs/ml_pricing_handoff.md`](docs/ml_pricing_handoff.md)
+- [`docs/genai_log_person3.md`](docs/genai_log_person3.md)

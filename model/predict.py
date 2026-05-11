@@ -26,28 +26,12 @@ FEATURE_IMPORTANCE_PATH = ARTIFACT_DIR / "feature_importance.csv"
 
 VALID_SUBREGIONS = ["Baixo Corgo", "Cima Corgo", "Douro Superior"]
 SUBREGION_ALIASES = {
-    "Baixo Corgo": "Baixo Corgo",
-    "Cima Corgo": "Cima Corgo",
-    "Douro Superior": "Douro Superior",
-    "Pinhao": "Cima Corgo",
-    "Pinhão": "Cima Corgo",
-    "PinhÃ£o": "Cima Corgo",
-    "Pinh?o": "Cima Corgo",
-    "Regua": "Baixo Corgo",
-    "Régua": "Baixo Corgo",
-    "RÃ©gua": "Baixo Corgo",
-    "R?gua": "Baixo Corgo",
-    "Vila Nova de Foz Coa": "Douro Superior",
-    "Vila Nova de Foz Côa": "Douro Superior",
-    "Vila Nova de Foz CÃ´a": "Douro Superior",
-    "Vila Nova de Foz C?a": "Douro Superior",
-}
-
-SUBREGION_ALIASES_NORMALIZED = {
-    "".join(
-        ch for ch in unicodedata.normalize("NFKD", key.lower()) if not unicodedata.combining(ch)
-    ): value
-    for key, value in SUBREGION_ALIASES.items()
+    "baixo corgo": "Baixo Corgo",
+    "cima corgo": "Cima Corgo",
+    "douro superior": "Douro Superior",
+    "pinhao": "Cima Corgo",
+    "regua": "Baixo Corgo",
+    "vila nova de foz coa": "Douro Superior",
 }
 
 
@@ -97,23 +81,40 @@ PRICING_CONFIG: dict[str, PricingConfig] = {
 }
 
 
+def _repair_text(value: str) -> str:
+    """Recover common UTF-8 text that was accidentally read as Latin-1."""
+    text = value
+    for _ in range(2):
+        try:
+            repaired = text.encode("latin1").decode("utf-8")
+        except UnicodeError:
+            break
+        if repaired == text:
+            break
+        text = repaired
+    return text
+
+
+def _ascii_key(value: str) -> str:
+    repaired = _repair_text(value).strip().lower()
+    normalized = unicodedata.normalize("NFKD", repaired)
+    ascii_text = "".join(ch for ch in normalized if not unicodedata.combining(ch))
+    ascii_text = ascii_text.replace("?", "")
+    return " ".join(ascii_text.split())
+
+
 def _normalise_subregion(subregion: str) -> str:
-    cleaned = str(subregion).strip()
-    if cleaned in SUBREGION_ALIASES:
-        return SUBREGION_ALIASES[cleaned]
-    ascii_cleaned = "".join(
-        ch for ch in unicodedata.normalize("NFKD", cleaned.lower()) if not unicodedata.combining(ch)
-    )
-    if ascii_cleaned in SUBREGION_ALIASES_NORMALIZED:
-        return SUBREGION_ALIASES_NORMALIZED[ascii_cleaned]
-    if ascii_cleaned.startswith("pinh"):
+    key = _ascii_key(str(subregion))
+    if key in SUBREGION_ALIASES:
+        return SUBREGION_ALIASES[key]
+    if key.startswith("pinh"):
         return "Cima Corgo"
-    if ascii_cleaned.startswith("reg") or ascii_cleaned.startswith("r?g") or ascii_cleaned.startswith("r"):
+    if key.startswith("reg") or key.startswith("rgua"):
         return "Baixo Corgo"
-    if "foz" in ascii_cleaned and ("coa" in ascii_cleaned or "c" in ascii_cleaned):
+    if "foz" in key and ("coa" in key or key.endswith("foz ca") or key.endswith("foz co")):
         return "Douro Superior"
     raise ValueError(
-        f"Unknown subregion '{subregion}'. Expected one of: {', '.join(sorted(SUBREGION_ALIASES))}."
+        f"Unknown subregion '{subregion}'. Expected one of: {', '.join(VALID_SUBREGIONS)}."
     )
 
 
