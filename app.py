@@ -4,40 +4,66 @@ st.set_page_config(
     page_title="VinhaGuard AI",
     page_icon="🍷",
     layout="wide",
+    initial_sidebar_state="expanded",
 )
 
-st.sidebar.image("https://via.placeholder.com/200x60/6B1C2E/FFFFFF?text=VinhaGuard+AI", use_container_width=True)
-st.sidebar.markdown("*Transparent protection for Douro wine producers*")
-
-st.title("VinhaGuard AI")
-st.subheader("Parametric Climate Insurance for the Douro Valley")
-
 st.markdown("""
----
-**VinhaGuard** solves one of the most overlooked problems in Portuguese agriculture:
-small wine producers in the Douro have no affordable, trustworthy way to insure
-their harvest against extreme weather.
+<style>
+#MainMenu, footer, header {visibility: hidden;}
 
-Our AI-powered platform provides **transparent, parametric insurance** — meaning
-payouts are triggered automatically by objective climate data, with no adjusters,
-no paperwork, and no disputes.
+[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #120408 0%, #1f0810 50%, #2a0d18 100%);
+    border-right: 1px solid #4a1020;
+}
+[data-testid="stSidebarNav"] a {
+    color: #ddb8c0 !important;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+[data-testid="stSidebarNav"] a:hover {
+    background: rgba(107,28,46,0.4) !important;
+}
+[data-testid="stSidebarNav"] a[aria-selected="true"] {
+    background: rgba(107,28,46,0.6) !important;
+}
+[data-testid="stSidebarNav"] span {
+    color: #ddb8c0 !important;
+}
 
----
-""")
+h1, h2, h3 {
+    font-family: Georgia, 'Times New Roman', serif;
+}
 
-col1, col2, col3 = st.columns(3)
+[data-testid="metric-container"] {
+    background: white;
+    border: 1px solid #f0e0e3;
+    border-radius: 10px;
+    padding: 16px 20px;
+    box-shadow: 0 1px 6px rgba(107,28,46,0.07);
+}
+[data-testid="metric-container"] label {
+    color: #6B1C2E !important;
+    font-weight: 600;
+}
+</style>
+""", unsafe_allow_html=True)
 
-with col1:
-    st.metric("Douro Subregions Covered", "6")
-    st.caption("Baixo Corgo · Cima Corgo · Douro Superior · Pinhão · Régua · Vila Nova de Foz Côa")
+st.sidebar.markdown("""
+<div style="text-align:center; padding: 24px 12px 16px;">
+    <div style="font-size: 2.2rem; margin-bottom: 6px;">🍷</div>
+    <div style="color: #e8c4cc; font-size: 1rem; font-weight: 700; letter-spacing: 3px;
+                font-family: Georgia, serif; text-transform: uppercase;">VinhaGuard</div>
+    <div style="color: #7a4a54; font-size: 0.68rem; letter-spacing: 2px; margin-top: 3px;
+                text-transform: uppercase;">Climate Insurance · Douro</div>
+</div>
+<hr style="border: none; border-top: 1px solid #4a1020; margin: 0 12px 8px;">
+""", unsafe_allow_html=True)
 
-with col2:
-    st.metric("Avg. Payout Time", "< 72 hours")
-    st.caption("Triggered automatically when climate thresholds are met")
-
-with col3:
-    st.metric("AI Risk Model", "LogReg + RF")
-    st.caption("Trained on 30+ years of Douro climate data")
-
-st.markdown("---")
-st.info("Use the sidebar to navigate to **Risk Assessment**, **Dashboard**, **Pricing Explainer**, or the **Chatbot**.")
+pg = st.navigation([
+    st.Page("pages/home.py",                title="Overview",           icon="🏠", default=True),
+    st.Page("pages/1_Risk_Assessment.py",   title="Risk Assessment",    icon="🎯"),
+    st.Page("pages/2_Dashboard.py",         title="Climate Dashboard",  icon="📊"),
+    st.Page("pages/3_Pricing_Explainer.py", title="How It's Priced",    icon="💰"),
+    st.Page("pages/4_Chatbot.py",           title="AI Assistant",       icon="💬"),
+])
+pg.run()
