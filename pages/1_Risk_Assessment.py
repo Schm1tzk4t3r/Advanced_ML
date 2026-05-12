@@ -51,58 +51,58 @@ SUBREGIONS = [
 
 # Input form with better layout
 with st.form("risk_form", border=True):
-    st.subheader("📋 Your Vineyard")
+    st.subheader("Your Vineyard")
 
     col1, col2 = st.columns(2)
 
     with col1:
         subregion = st.selectbox(
-            "🗺️ Douro Sub-Region",
+            "Douro Sub-Region",
             SUBREGIONS,
             help="Select the closest sub-region to your vineyard"
         )
         area_ha = st.slider(
-            "📏 Vineyard Area (hectares)",
+            "Vineyard Area (hectares)",
             min_value=1, max_value=500, value=12,
             help="Total area of vineyard under insurance"
         )
 
     with col2:
         insured_value = st.number_input(
-            "💰 Insured Crop Value (€)",
+            "Insured Crop Value (€)",
             min_value=1_000, max_value=5_000_000, value=40_000, step=5_000,
             help="Estimated value of this season's harvest"
         )
         risk_type = st.radio(
-            "⛈️ Climate Risk Type",
+            "Climate Risk Type",
             ["Heat", "Frost", "Drought", "All"],
             horizontal=True,
             help="Which climate hazards concern you most?"
         )
 
     # Advanced options
-    with st.expander("⚙️ Advanced Options"):
+    with st.expander("Advanced Options"):
         elevation = st.slider(
-            "🏔️ Elevation (meters above sea level)",
+            "Elevation (meters above sea level)",
             min_value=0, max_value=900, value=200,
             help="Higher elevation generally means cooler temps"
         )
 
-    submitted = st.form_submit_button("📊 Calculate Risk & Quote", type="primary", use_container_width=True)
+    submitted = st.form_submit_button("Calculate Risk & Quote", type="primary", use_container_width=True)
 
 if submitted:
     if insured_value == 0 or area_ha == 0:
-        st.error("❌ Insured value and area must be greater than zero.")
+        st.error("Insured value and area must be greater than zero.")
     else:
-        with st.spinner("🔄 Running climate risk model..."):
+        with st.spinner("Running climate risk model..."):
             try:
                 result = predict_risk_and_premium(subregion, area_ha, insured_value, risk_type, elevation)
             except Exception as e:
-                st.error(f"⚠️ Model error: {e}")
+                st.error(f"Model error: {e}")
                 st.stop()
 
         st.markdown("---")
-        st.subheader("📈 Your Risk Assessment")
+        st.subheader("Your Risk Assessment")
 
         risk_prob = result["risk_prob"]
         premium_eur = result["premium_eur"]
@@ -118,15 +118,15 @@ if submitted:
 
             if risk_prob < 0.30:
                 risk_class = "risk-low"
-                risk_label = "✅ LOW RISK"
+                risk_label = "LOW RISK"
                 risk_color = "#28A745"
             elif risk_prob < 0.60:
                 risk_class = "risk-medium"
-                risk_label = "⚠️ MEDIUM RISK"
+                risk_label = "MEDIUM RISK"
                 risk_color = "#FFC107"
             else:
                 risk_class = "risk-high"
-                risk_label = "🔴 HIGH RISK"
+                risk_label = "HIGH RISK"
                 risk_color = "#DC3545"
 
             st.markdown(f"<h3 style='margin-top: 0; color: {risk_color};'>{risk_prob:.0%}</h3>", unsafe_allow_html=True)
@@ -160,7 +160,7 @@ if submitted:
         """, unsafe_allow_html=True)
 
         # Breakdown
-        st.subheader("💳 Premium Breakdown")
+        st.subheader("Premium Breakdown")
         breakdown_data = {
             "Component": ["Expected Payout", "Risk Loading", "Admin Cost", "Margin", "TOTAL"],
             "Amount": [
@@ -182,4 +182,4 @@ if submitted:
         st.dataframe(breakdown_data, use_container_width=True, hide_index=True)
         st.caption("Expected payout, risk loading, admin cost, and margin come directly from the ML pricing backend.")
 
-        st.info("ℹ️ This quote is illustrative and based on the climate risk model. Actual premiums may vary based on reinsurance costs and market conditions.", icon="ℹ️")
+        st.info("This quote is illustrative and based on the climate risk model. Actual premiums may vary based on reinsurance costs and market conditions.")

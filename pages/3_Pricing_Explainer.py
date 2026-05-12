@@ -39,15 +39,15 @@ st.markdown("Adjust the sliders below to see how each component affects price:")
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    insured_value = st.number_input("💰 Insured Value (€)", min_value=1_000, max_value=5_000_000, value=40_000, step=5_000)
+    insured_value = st.number_input("Insured Value (€)", min_value=1_000, max_value=5_000_000, value=40_000, step=5_000)
     area_ha = st.slider("Vineyard Area (ha)", min_value=1, max_value=500, value=12)
-    risk_prob = st.slider("📊 Risk Probability (%)", min_value=0, max_value=100, value=15,
+    risk_prob = st.slider("Risk Probability (%)", min_value=0, max_value=100, value=15,
                           help="Typical severe-event trigger probability is 8–22% depending on sub-region and hazard type") / 100
-    loss_given_trigger = st.slider("📉 Loss if Trigger Fires (%)", min_value=10, max_value=100, value=55) / 100
+    loss_given_trigger = st.slider("Loss if Trigger Fires (%)", min_value=10, max_value=100, value=55) / 100
 
 with col2:
-    risk_loading = st.slider("🛡️ Risk Loading (%)", min_value=0, max_value=50, value=25) / 100
-    admin_margin = st.slider("🏢 Admin Margin (%)", min_value=0, max_value=30, value=15) / 100
+    risk_loading = st.slider("Risk Loading (%)", min_value=0, max_value=50, value=25) / 100
+    admin_margin = st.slider("Admin Margin (%)", min_value=0, max_value=30, value=15) / 100
 
 with col3:
     # Calculations
@@ -137,9 +137,9 @@ st.markdown("""
 """)
 
 st.info("""
-⚠️ **Trade-off:** Basis risk is inherent in parametric insurance. We can't eliminate it,
+**Trade-off:** Basis risk is inherent in parametric insurance. We can't eliminate it,
 but we disclose it and calibrate triggers to minimize it. This is the price of speed and transparency.
-""", icon="ℹ️")
+""")
 
 st.markdown("---")
-st.caption("💡 All figures above are illustrative for educational purposes.")
+st.caption("All figures above are illustrative for educational purposes.")

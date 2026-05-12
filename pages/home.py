@@ -223,12 +223,12 @@ with col_right:
     st.markdown("""
     <div class="region-card">
         <div class="title">Risk profiles and demo locations</div>
-        <div class="region-pill">📍 Baixo Corgo — Maritime influence</div>
-        <div class="region-pill">📍 Cima Corgo — Historically challenging</div>
-        <div class="region-pill">📍 Douro Superior — High elevation</div>
-        <div class="region-pill">📍 Pinhão — Premium wine country</div>
-        <div class="region-pill">📍 Régua — River valley terraces</div>
-        <div class="region-pill">📍 Vila Nova de Foz Côa — Eastern frontier</div>
+        <div class="region-pill">Baixo Corgo — Maritime influence</div>
+        <div class="region-pill">Cima Corgo — Historically challenging</div>
+        <div class="region-pill">Douro Superior — Hottest and driest</div>
+        <div class="region-pill">Pinhão — Premium wine country</div>
+        <div class="region-pill">Régua — River valley terraces</div>
+        <div class="region-pill">Vila Nova de Foz Côa — Eastern frontier</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -239,18 +239,17 @@ st.markdown('<p class="section-heading">How It Works</p>', unsafe_allow_html=Tru
 st.markdown('<p class="section-sub">Four steps from vineyard data to automatic payout.</p>', unsafe_allow_html=True)
 
 steps = [
-    ("01", "🗺️", "Enter Details",      "Sub-region, vineyard area, crop value, and your preferred risk coverage type."),
-    ("02", "📊", "Get a Quote",         "AI risk model analyzes 30+ years of Douro climate data and returns a tailored premium."),
-    ("03", "✅", "Activate Coverage",   "Select your trigger threshold and confirm your annual premium to start coverage."),
-    ("04", "💰", "Automatic Payout",    "Trigger fires → payment within 72 hours. No claims. No friction. No delays."),
+    ("01", "Enter Details",      "Sub-region, vineyard area, crop value, and your preferred risk coverage type."),
+    ("02", "Get a Quote",         "AI risk model analyzes 30+ years of Douro climate data and returns a tailored premium."),
+    ("03", "Activate Coverage",   "Select your trigger threshold and confirm your annual premium to start coverage."),
+    ("04", "Automatic Payout",    "Trigger fires — payment within 72 hours. No claims. No friction. No delays."),
 ]
 cols = st.columns(4)
-for col, (num, icon, title, desc) in zip(cols, steps):
+for col, (num, title, desc) in zip(cols, steps):
     with col:
         st.markdown(f"""
         <div class="step-box">
             <div class="step-num">Step {num}</div>
-            <div class="step-icon">{icon}</div>
             <div class="step-title">{title}</div>
             <div class="step-desc">{desc}</div>
         </div>""", unsafe_allow_html=True)

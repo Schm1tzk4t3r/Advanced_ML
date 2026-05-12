@@ -2,7 +2,6 @@ import streamlit as st
 
 st.set_page_config(
     page_title="VinhaGuard AI",
-    page_icon="🍷",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -50,7 +49,6 @@ h1, h2, h3 {
 
 st.sidebar.markdown("""
 <div style="text-align:center; padding: 24px 12px 16px;">
-    <div style="font-size: 2.2rem; margin-bottom: 6px;">🍷</div>
     <div style="color: #e8c4cc; font-size: 1rem; font-weight: 700; letter-spacing: 3px;
                 font-family: Georgia, serif; text-transform: uppercase;">VinhaGuard</div>
     <div style="color: #7a4a54; font-size: 0.68rem; letter-spacing: 2px; margin-top: 3px;
@@ -60,10 +58,10 @@ st.sidebar.markdown("""
 """, unsafe_allow_html=True)
 
 pg = st.navigation([
-    st.Page("pages/home.py",                title="Overview",           icon="🏠", default=True),
-    st.Page("pages/1_Risk_Assessment.py",   title="Risk Assessment",    icon="🎯"),
-    st.Page("pages/2_Dashboard.py",         title="Climate Dashboard",  icon="📊"),
-    st.Page("pages/3_Pricing_Explainer.py", title="How It's Priced",    icon="💰"),
-    st.Page("pages/4_Chatbot.py",           title="AI Assistant",       icon="💬"),
+    st.Page("pages/home.py",                title="Overview",           default=True),
+    st.Page("pages/1_Risk_Assessment.py",   title="Risk Assessment"),
+    st.Page("pages/2_Dashboard.py",         title="Climate Dashboard"),
+    st.Page("pages/3_Pricing_Explainer.py", title="How It's Priced"),
+    st.Page("pages/4_Chatbot.py",           title="AI Assistant"),
 ])
 pg.run()
