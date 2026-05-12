@@ -44,7 +44,7 @@ Traditional insurance asks "Did you lose money?" and sends an inspector.
 Parametric insurance asks "Did climate conditions hit the agreed trigger?" and pays automatically.
 
 Key terms:
-• Trigger: The specific climate condition that activates the payout (e.g., 14 heat days above 38 °C)
+• Trigger: The specific climate condition that activates the payout (e.g., 5 heat days above 38 °C)
 • Payout speed: < 72 hours after trigger confirmation — no claim forms needed
 • Basis risk: The unavoidable gap between when the trigger fires and when the farmer
   actually suffers a loss. VinhaGuard discloses this honestly (typically 8–22%).
@@ -64,7 +64,7 @@ Users can select from 6 Douro sub-regions, but there are 3 distinct risk profile
     • Vila Nova de Foz Côa → Douro Superior profile
 
 ── Coverage Types & Triggers ───────────────
-  • Heat:     14 consecutive days above 38 °C during veraison (July–August)
+  • Heat:     At least 5 days above 38 °C during the growing season
               Expected loss if triggered: 50 % of insured value
   • Frost:    3 spring days below −2 °C during budbreak/flowering
               Expected loss if triggered: 40 % of insured value
@@ -241,6 +241,6 @@ if st.session_state.messages:
 
 st.markdown("---")
 st.caption(
-    "VinhaGuard AI Assistant · Powered by Gemini 2.0 Flash · "
+    "VinhaGuard AI Assistant · Powered by Gemini 2.5 Flash Lite · "
     "Responses are informational only — this is an academic prototype, not a licensed insurance product."
 )

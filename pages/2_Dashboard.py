@@ -72,12 +72,14 @@ st.title("Climate Risk Dashboard")
 st.markdown("Historical analysis and model explainability for your selected region.")
 st.markdown("---")
 
-col_select, col_info = st.columns([1, 3])
+col_select, col_risk, col_info = st.columns([1, 1, 2])
 with col_select:
     selected_subregion = st.selectbox("Select Demo Location / Risk Region", DISPLAY_SUBREGIONS)
+with col_risk:
+    selected_risk_type = st.selectbox("Risk Type", ["Heat", "Frost", "Drought", "Both"])
 
 df = load_history()
-result = predict_risk_and_premium(selected_subregion, 12, 40_000, "Heat")
+result = predict_risk_and_premium(selected_subregion, 12, 40_000, selected_risk_type)
 canonical_subregion = result["subregion_used"]
 sub_df = df[df["subregion"] == canonical_subregion].copy()
 
@@ -92,41 +94,47 @@ if sub_df.empty:
     st.warning("No model history is available for this risk profile.")
     st.stop()
 
-TRIGGER_THRESHOLD = 5
+# Map risk type to the correct column and chart config
+RISK_CHART_CONFIG = {
+    "Heat":    {"col": "heat_days_38",            "trigger_col": "heat_trigger",    "threshold": 5,  "y_label": "Average heat days >= 38 C",        "title": "Annual Heat Days >= 38 C"},
+    "Frost":   {"col": "spring_severe_frost_days", "trigger_col": "frost_trigger",   "threshold": 3,  "y_label": "Average severe frost days (spring)", "title": "Annual Severe Frost Days (Spring)"},
+    "Drought": {"col": "max_consecutive_dry_days", "trigger_col": "drought_trigger", "threshold": None, "y_label": "Average max consecutive dry days",  "title": "Annual Max Consecutive Dry Days"},
+    "Both":   {"col": "heat_days_38",            "trigger_col": "heat_trigger",    "threshold": 5,  "y_label": "Average heat days >= 38 C",        "title": "Annual Heat Days >= 38 C (Combined Cover)"},
+}
+chart_cfg = RISK_CHART_CONFIG[selected_risk_type]
 
-year_df = (
-    sub_df.groupby("year", as_index=False)
-    .agg(
-        heat_days_38=("heat_days_38", "mean"),
-        heat_trigger=("heat_trigger", "max"),
-        climate_stress_year=("climate_stress_year", "max"),
-        model_stress_probability=("model_stress_probability", "mean"),
-    )
-)
-year_df["triggered"] = year_df["heat_trigger"].astype(bool)
+agg_cols = {
+    chart_cfg["col"]: (chart_cfg["col"], "mean"),
+    chart_cfg["trigger_col"]: (chart_cfg["trigger_col"], "max"),
+    "climate_stress_year": ("climate_stress_year", "max"),
+    "model_stress_probability": ("model_stress_probability", "mean"),
+}
+year_df = sub_df.groupby("year", as_index=False).agg(**agg_cols)
+year_df["triggered"] = year_df[chart_cfg["trigger_col"]].astype(bool)
 year_df["colour"] = year_df["triggered"].map({True: "Triggered (payout)", False: "No trigger"})
 
 # Chart 1 - Trigger History
 st.markdown("### 1. Historical Trigger Events")
-st.markdown("Which years had heat stress above the trigger threshold?")
+st.markdown(f"Which years crossed the **{selected_risk_type}** trigger threshold?")
 
 fig1 = px.bar(
     year_df,
     x="year",
-    y="heat_days_38",
+    y=chart_cfg["col"],
     color="colour",
     color_discrete_map={"Triggered (payout)": BURGUNDY, "No trigger": GREY},
-    labels={"heat_days_38": "Average heat days >= 38 C", "year": "Year", "colour": ""},
-    title=f"Annual Heat Days >= 38 C - {canonical_subregion}",
+    labels={chart_cfg["col"]: chart_cfg["y_label"], "year": "Year", "colour": ""},
+    title=f"{chart_cfg['title']} — {canonical_subregion}",
     height=400,
 )
-fig1.add_hline(
-    y=TRIGGER_THRESHOLD,
-    line_dash="dash",
-    line_color=GOLD,
-    annotation_text=f"Trigger ({TRIGGER_THRESHOLD} days)",
-    annotation_position="top left",
-)
+if chart_cfg["threshold"] is not None:
+    fig1.add_hline(
+        y=chart_cfg["threshold"],
+        line_dash="dash",
+        line_color=GOLD,
+        annotation_text=f"Trigger ({chart_cfg['threshold']} days)",
+        annotation_position="top left",
+    )
 fig1.update_layout(legend_title_text="", hovermode="x unified", xaxis_tickangle=-45)
 st.plotly_chart(fig1, use_container_width=True)
 st.caption(
@@ -180,7 +188,7 @@ with col_scatter:
         color_discrete_map={"Match": BURGUNDY, "Mismatch (basis risk)": GOLD},
         symbol="Climate Stress Year",
         size="Model Stress Probability",
-        title="Heat Trigger vs Climate Stress Proxy",
+        title=f"{selected_risk_type} Trigger vs Climate Stress Proxy",
         height=350,
     )
     fig3.update_layout(hovermode="x unified", xaxis_tickangle=-45)

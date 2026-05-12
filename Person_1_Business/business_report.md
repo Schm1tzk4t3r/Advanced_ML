@@ -14,7 +14,7 @@ When a predefined severe climate threshold is breached, a liquidity payout is tr
 
 The strongest business setup is a **B2B2C model** — VinhaGuard AI operates as a data, pricing, and monitoring layer partnered with a licensed insurer or cooperative. **VinhaGuard AI does not carry underwriting risk.** The insurer partner remains the regulated risk carrier; VinhaGuard provides pricing infrastructure, trigger monitoring, and user-facing explainability.
 
-**Why now:** VinhaGuard AI is viable today because three previously expensive inputs are now accessible at low cost: high-resolution ERA5 reanalysis climate data is freely available via Open-Meteo, lightweight classification models (Logistic Regression, XGBoost) can be trained on modest hardware in minutes, and Streamlit enables a production-quality web interface without a dedicated engineering team. Vineyard-level parametric pricing at this granularity was not feasible a decade ago.
+**Why now:** VinhaGuard AI is viable today because three previously expensive inputs are now accessible at low cost: high-resolution ERA5 reanalysis climate data is freely available via Open-Meteo, lightweight classification models (Logistic Regression, Random Forest) can be trained on modest hardware in minutes, and Streamlit enables a production-quality web interface without a dedicated engineering team. Vineyard-level parametric pricing at this granularity was not feasible a decade ago.
 
 ---
 
@@ -72,7 +72,7 @@ VinhaGuard AI is a parametric insurance platform. Unlike traditional indemnity i
 
 A typical user journey illustrates the deployable product:
 
-> A cooperative registers its member vineyards with location and plot characteristics. VinhaGuard AI retrieves 30 years of ERA5 weather data for each site, estimates sub-regional trigger probability, and recommends a transparent payout-premium combination. During the growing season, the system monitors trigger indicators. If a threshold is breached — for example, 14 consecutive days above 38°C during véraison — the system produces an automatic payout recommendation for the insurer partner and notifies the producer. The payout is transferred within a target of 72 hours. No field inspection. No claims negotiation.
+> A cooperative registers its member vineyards with location and plot characteristics. VinhaGuard AI retrieves 30 years of ERA5 weather data for each site, estimates sub-regional trigger probability, and recommends a transparent payout-premium combination. During the growing season, the system monitors trigger indicators. If a threshold is breached — for example, 5 or more days above 38°C during the growing season — the system produces an automatic payout recommendation for the insurer partner and notifies the producer. The payout is transferred within a target of 72 hours. No field inspection. No claims negotiation.
 
 This workflow is not well served by a static actuarial spreadsheet because it requires vineyard-level calibration, continuous seasonal monitoring, and explainable communication of uncertainty to non-technical users.
 
@@ -82,11 +82,11 @@ A sceptical reviewer might ask: can a fixed rule and a historical probability ta
 
 **1. Trigger calibration requires location-specific learning.** A single regional threshold applied to all Douro sites would create systematic basis risk. The risk model uses site-level historical weather and per-location 80th-percentile thresholds to estimate the probability distribution of trigger breach at each vineyard — capturing relative climate anomalies, not just absolute temperatures. This per-location calibration is the core technical design choice, implemented in `src/data/make_dataset.py`.
 
-**2. Basis-risk estimation requires a model, not a fixed constant.** The gap between when a trigger fires and when actual loss occurs — the basis risk — depends on how well the trigger threshold is matched to real vineyard conditions. In the current prototype, the 12.5% basis-risk figure is a hardcoded placeholder pending Person 3's trained model. In the designed product, this would be an estimated output calibrated against historical trigger-vs-loss mismatches, not a static assumption.
+**2. Basis-risk estimation requires a model, not a fixed constant.** The gap between when a trigger fires and when actual loss occurs — the basis risk — depends on how well the trigger threshold is matched to real vineyard conditions. In the deployed prototype, basis risk is estimated dynamically (8–22%) from subregion coverage depth and elevation distance from the historical median — not a static constant. In a production product, this would be further calibrated against historical trigger-vs-loss mismatches.
 
 **3. Premium calibration depends on calibrated trigger probabilities.** The premium formula (`Expected Loss = IV × P(trigger) × LGT`) is only as credible as the P(trigger) estimate. Using the full stress classification rate (45–72%) as a direct proxy for trigger probability produces premiums that are commercially unviable (35–57% of insured value). The system's value is in calibrating P(trigger) to severe events only (~8–12%), informed by the dataset's learned threshold distributions and validated against known extreme years.
 
-**Current prototype status:** The risk probability outputs currently come from a rule-based mock (`model/predict.py`), which hardcodes sub-regional probabilities. This is an explicit placeholder for Person 3's trained Logistic Regression / XGBoost classifier. The infrastructure — data pipeline, feature engineering, premium formula, Streamlit app — is fully implemented and awaits model integration.
+**Current prototype status:** The risk probability outputs come from Person 3's trained Random Forest classifier (ROC-AUC 0.974 on a chronological 2020–2024 holdout), blended 70/30 with historical trigger rates. The full pipeline — data, feature engineering, ML model, premium formula, and Streamlit app — is implemented and deployed.
 
 The Portuguese-language interface and explainability assistant are secondary features. The core AI value is risk calibration, vineyard-specific pricing, and basis-risk reduction.
 
@@ -104,7 +104,7 @@ The model output therefore serves two distinct purposes:
 
 | Risk type | Trigger condition | Dataset feature |
 |---|---|---|
-| **Heat** | 14 consecutive days above 38°C during véraison (July–August) | `heat_days_38`, `heatwave_max_streak` |
+| **Heat** | At least 5 days above 38°C during the growing season | `heat_days_38`, `heatwave_max_streak` |
 | **Frost** | 3 or more days below −2°C during flowering (March–May) | `spring_severe_frost_days` |
 | **Drought** | Max consecutive dry days ≥ location's own 80th-percentile threshold | `max_consecutive_dry_days` |
 
@@ -156,7 +156,7 @@ VinhaGuard AI operates as a **hybrid SaaS + insurance distribution layer**, not 
 | Loss Given Trigger | 55% | Avg. fraction of insured value lost when trigger fires |
 | Risk Loading | 25% | Insurer buffer for uncertainty and reinsurance |
 | Admin Margin | 15% | Platform and operational costs |
-| Prototype basis-risk indicator | 12.5% | Hardcoded prototype placeholder — requires actuarial calibration |
+| Basis-risk indicator | 8–22% (dynamic) | Estimated from subregion coverage depth and elevation distance from median |
 
 ### MVP Premium Formula
 
@@ -244,7 +244,7 @@ Basis-risk reduction is not merely a limitation to disclose — it is the primar
 
 **The core technical value:** A single regional trigger threshold applied uniformly across all Douro sites would produce systematic unfairness — producers in a cool valley microclimate might face the same threshold as those on a sun-exposed slope. The prototype uses per-location 80th-percentile distributions to design vineyard-specific triggers that reduce false negatives: cases where a producer suffers damage but receives no payout.
 
-**Residual basis risk:** Even with localized triggers, the trigger may not perfectly match a producer's actual loss. The current prototype reports a **12.5% basis-risk indicator** — this is a hardcoded prototype placeholder, not a validated actuarial estimate. Actual basis risk depends on trigger design, grid resolution, and local micro-climate variability.
+**Residual basis risk:** Even with localized triggers, the trigger may not perfectly match a producer's actual loss. The deployed prototype estimates basis risk dynamically at **8–22%** depending on subregion coverage depth and how far the entered elevation diverges from the historical site median. Actual basis risk depends on trigger design, grid resolution, and local micro-climate variability.
 
 **ERA5 grid limitation:** The ERA5 data has a ~9 km grid resolution. Two vineyard sites within the same grid cell receive identical weather values regardless of micro-climate differences in slope, aspect, or altitude. This must be disclosed clearly to policyholders.
 
@@ -266,7 +266,7 @@ All quantitative claims in this report are traceable to the codebase:
 | 2022 = 100% sites stressed | Known-year validation table | All 32 sites labelled stress = 1 in 2022 (`docs/data_dictionary.md`) |
 | 72% Douro Superior stress rate | Dataset sub-regional analysis | Average stress classification rate for DS sites (DS01–DS10) |
 | 45%, 55%, 72% sub-regional rates | `model/predict.py` | Prototype mock values grounded in dataset; to be replaced by Person 3's classifier |
-| 12.5% basis-risk indicator | `model/predict.py` | Hardcoded prototype placeholder; requires actuarial calibration |
+| 8–22% basis-risk indicator | `model/predict.py` → `_basis_risk_pct()` | Dynamic estimate from subregion coverage depth and elevation distance |
 | ~8–12% trigger probability | Illustrative calibration | Narrower subset of stress years; exact value to be set by Person 3 + actuarial review |
 
 ### Implementation Status
@@ -279,9 +279,9 @@ All quantitative claims in this report are traceable to the codebase:
 | Premium calculator (matching app formula) | ✅ Implemented (`pages/3_Pricing_Explainer.py`) |
 | Streamlit app (4 pages: Risk, Dashboard, Pricing, Chatbot) | ✅ Implemented |
 | Portuguese-language interface | ✅ Implemented |
-| Trained ML risk model (LR / XGBoost) | ⏳ In development — Person 3 |
-| Risk probability outputs | 🔄 Mock placeholder (`model/predict.py`) awaiting Person 3 |
-| Basis-risk estimation | 🔄 Hardcoded placeholder (12.5%) — requires actuarial calibration |
+| Trained ML risk model (LR / Random Forest) | ✅ Deployed — `model/artifacts/risk_model.joblib` |
+| Risk probability outputs | ✅ Live — Random Forest ROC-AUC 0.974, blended 70/30 with historical trigger rates |
+| Basis-risk estimation | ✅ Dynamic (8–22%) — `_basis_risk_pct()` in `model/predict.py` |
 | Live seasonal trigger monitoring | 🔄 Simulated in demo |
 | Insurer payout integration | 🔄 Future partner integration |
 | Real payout execution | 🔄 Future partner integration |

@@ -75,7 +75,7 @@ with st.form("risk_form", border=True):
         )
         risk_type = st.radio(
             "⛈️ Climate Risk Type",
-            ["Heat", "Frost", "Both"],
+            ["Heat", "Frost", "Drought", "All"],
             horizontal=True,
             help="Which climate hazards concern you most?"
         )
