@@ -94,12 +94,20 @@ if sub_df.empty:
     st.warning("No model history is available for this risk profile.")
     st.stop()
 
+# For combined cover, compute a combined trigger (any hazard fires) before aggregation.
+sub_df = sub_df.copy()
+sub_df["any_trigger"] = (
+    (sub_df["heat_trigger"] == 1)
+    | (sub_df["frost_trigger"] == 1)
+    | (sub_df["drought_trigger"] == 1)
+).astype(int)
+
 # Map risk type to the correct column and chart config
 RISK_CHART_CONFIG = {
-    "Heat":    {"col": "heat_days_38",            "trigger_col": "heat_trigger",    "threshold": 5,  "y_label": "Average heat days >= 38 C",        "title": "Annual Heat Days >= 38 C"},
-    "Frost":   {"col": "spring_severe_frost_days", "trigger_col": "frost_trigger",   "threshold": 3,  "y_label": "Average severe frost days (spring)", "title": "Annual Severe Frost Days (Spring)"},
-    "Drought": {"col": "max_consecutive_dry_days", "trigger_col": "drought_trigger", "threshold": None, "y_label": "Average max consecutive dry days",  "title": "Annual Max Consecutive Dry Days"},
-    "Both":   {"col": "heat_days_38",            "trigger_col": "heat_trigger",    "threshold": 5,  "y_label": "Average heat days >= 38 C",        "title": "Annual Heat Days >= 38 C (Combined Cover)"},
+    "Heat":    {"col": "heat_days_38",            "trigger_col": "heat_trigger",    "threshold": 5,    "y_label": "Average heat days >= 38 C",             "title": "Annual Heat Days >= 38 C"},
+    "Frost":   {"col": "spring_severe_frost_days", "trigger_col": "frost_trigger",   "threshold": 3,    "y_label": "Average severe frost days (spring)",    "title": "Annual Severe Frost Days (Spring)"},
+    "Drought": {"col": "max_consecutive_dry_days", "trigger_col": "drought_trigger", "threshold": None, "y_label": "Average max consecutive dry days",      "title": "Annual Max Consecutive Dry Days"},
+    "Both":    {"col": "climate_stress_year",      "trigger_col": "any_trigger",     "threshold": None, "y_label": "Share of sites with any climate stress", "title": "Annual Combined Climate Stress (Heat / Frost / Drought)"},
 }
 chart_cfg = RISK_CHART_CONFIG[selected_risk_type]
 
@@ -168,9 +176,9 @@ st.caption("Higher values indicate stronger influence on the model's risk rankin
 
 st.markdown("---")
 
-# Chart 3 - Basis Risk Panel
-st.markdown("### 3. Basis Risk: The Reality Gap")
-st.markdown("When does the trigger not match the broader climate-stress proxy?")
+# Chart 3 - Trigger Alignment Diagnostic
+st.markdown("### 3. Trigger Alignment Diagnostic")
+st.markdown("How well does the selected trigger align with the broader climate-stress proxy?")
 
 col_scatter, col_explain = st.columns([2, 1])
 
@@ -178,14 +186,14 @@ with col_scatter:
     basis_df = year_df[["year", "triggered", "climate_stress_year", "model_stress_probability"]].copy()
     basis_df.columns = ["Year", "Trigger Fired", "Climate Stress Year", "Model Stress Probability"]
     basis_df["Match"] = basis_df["Trigger Fired"] == basis_df["Climate Stress Year"].astype(bool)
-    basis_df["Status"] = basis_df["Match"].map({True: "Match", False: "Mismatch (basis risk)"})
+    basis_df["Status"] = basis_df["Match"].map({True: "Match", False: "Mismatch (trigger ≠ stress proxy)"})
 
     fig3 = px.scatter(
         basis_df,
         x="Year",
         y="Trigger Fired",
         color="Status",
-        color_discrete_map={"Match": BURGUNDY, "Mismatch (basis risk)": GOLD},
+        color_discrete_map={"Match": BURGUNDY, "Mismatch (trigger ≠ stress proxy)": GOLD},
         symbol="Climate Stress Year",
         size="Model Stress Probability",
         title=f"{selected_risk_type} Trigger vs Climate Stress Proxy",
@@ -197,14 +205,15 @@ with col_scatter:
 with col_explain:
     st.markdown(
         """
-**What is basis risk?**
+**What does this chart show?**
 
-Basis risk is the mismatch between:
-- when the objective climate trigger fires;
-- and when the farmer actually suffers a loss.
+This diagnostic compares when the objective climate trigger fires
+against when the broader climate-stress proxy is active.
 
-Because we do not yet have farm-level claims or yield-loss data, this prototype compares
-the heat trigger with our climate-stress proxy. Production validation would need real loss data.
+Mismatches (gold dots) indicate years where the two signals diverge.
+This is a **model-level diagnostic**, not a direct measure of basis risk:
+true basis risk measures the gap between the trigger and **actual farm losses**,
+which requires yield or claims data not yet available in this prototype.
 """
     )
 
@@ -252,7 +261,12 @@ st.markdown("---")
 
 # Section 5 - Model performance figures
 st.markdown("### 5. AI Model Performance")
-st.markdown("Evaluation metrics from training on 30+ years of Douro climate data:")
+st.markdown(
+    "Evaluation metrics from training on 30+ years of Douro climate data. "
+    "Random Forest was selected for its higher ROC-AUC (0.974 vs 0.956). "
+    "Note: Logistic Regression has a better Brier score (0.071 vs 0.094), "
+    "meaning it is better probability-calibrated — relevant context when interpreting premium outputs."
+)
 
 FIGURES_DIR = os.path.join(os.path.dirname(__file__), "..", "docs", "figures")
 

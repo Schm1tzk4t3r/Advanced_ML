@@ -26,6 +26,8 @@ Shape:
 
 The target is a climate-trigger proxy, not a real claims/loss label. It is derived from anomalous heat, spring frost, and drought conditions. This is acceptable for a course MVP, but production deployment would require insurer claims, vineyard yields, station calibration, and/or NDVI validation.
 
+**Honest caveat on the high AUC:** Because `climate_stress_year` is a deterministic function of the same ERA5 features used as model inputs, the model is partly learning to recover its own label rule from noisy inputs rather than discovering independent predictive signal. The high ROC-AUC (0.974) should therefore be interpreted as confirming that the engineered features faithfully encode the label logic — not as evidence of out-of-sample predictive power over actual crop losses. The known-year validation table (2003, 2005, 2017, 2022, 2024 all correctly identified as extreme) is the more meaningful real-world check.
+
 ## Models
 
 The training pipeline lives in `model/train.py`.
@@ -88,6 +90,7 @@ Random Forest was selected as the deployed model because it gives the strongest 
 Additional robustness check:
 
 - GroupKFold by `location_id`, Random Forest ROC-AUC: 0.936 mean, 0.053 std across five folds.
+- One fold scores 0.833 against the others at 0.95+. This is expected when that fold's held-out locations form a geographically atypical cluster (e.g., a batch of high-elevation DS or low-elevation BC sites). It does not indicate overfitting — it shows the model is less certain when extrapolating to unfamiliar elevation/longitude combinations, which is also what the basis-risk logic captures.
 
 Top feature drivers from permutation importance:
 

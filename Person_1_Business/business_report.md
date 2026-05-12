@@ -164,7 +164,9 @@ The annual premium follows the formula implemented in the Streamlit Pricing Expl
 
 ```
 Expected Loss  = Insured Value × P(trigger) × Loss Given Trigger
-Annual Premium = Expected Loss × (1 + Risk Loading) × (1 + Admin Margin)
+Risk Loading   = Expected Loss × Risk Loading %
+Admin Cost     = EUR 50 (platform fee) + EUR 2 × Vineyard Area (ha)
+Annual Premium = (Expected Loss + Risk Loading + Admin Cost) × (1 + Admin Margin)
 ```
 
 ### Smallholder Product — Illustrative Example
@@ -177,6 +179,7 @@ Annual Premium = Expected Loss × (1 + Risk Loading) × (1 + Admin Margin)
 | Risk Loading (25%) | EUR 55 |
 | Admin Margin (15%) | EUR 41 |
 | **Formula-based premium** | **EUR 316** |
+| *(Fixed admin cost EUR 50 + EUR 2/ha excluded from this example for simplicity)* | |
 | **Commercial pilot price** | **EUR 550** |
 
 **Why the range EUR 316–550:** The formula at 8% trigger probability produces EUR 316. The EUR 550 commercial figure used in the revenue model reflects a rounded pilot price that incorporates frost and drought coverage add-ons (which modestly raise the effective trigger probability), conservative onboarding and support buffers, and standard rounding for smallholder policy pricing. Both figures are illustrative assumptions pending actuarial validation.

@@ -56,7 +56,7 @@ Users can select from 6 Douro sub-regions, but there are 3 distinct risk profile
   Canonical profiles:
     • Baixo Corgo  — Maritime influence, milder climate
     • Cima Corgo   — Historically more challenging, centre of the region
-    • Douro Superior — Highest elevation, coolest temperatures
+    • Douro Superior — Hottest and driest; most continental climate, highest climate exposure
 
   Aliases (map to canonical profiles for pricing):
     • Pinhão          → Cima Corgo profile
@@ -75,15 +75,14 @@ Users can select from 6 Douro sub-regions, but there are 3 distinct risk profile
               Risk loading: 30 % (higher due to multiple hazards)
 
 ── Premium Pricing Formula ─────────────────
-Premium = (Insured Value × Risk Probability × Loss-Given-Trigger)
-          × (1 + Risk Loading)
-          × (1 + Admin Margin)
+Premium = (Expected Payout + Risk Loading Amount + Admin Cost) × (1 + Admin Margin)
 
 Where:
+  • Expected Payout  = Insured Value × Risk Probability × Loss-Given-Trigger
   • Risk Probability = 70 % historical trigger rate + 30 % AI model output
-  • Risk Loading ≈ 25 % base (+ basis-risk adjustment if elevation diverges from median)
+  • Risk Loading Amount = Expected Payout × Risk Loading % (≈ 25 % base)
+  • Admin Cost = €50 flat fee + €2 per hectare per year
   • Admin Margin = 15 %
-  • Admin cost = €50 flat fee + €2 per hectare per year
 
 Premium breakdown (approximate):
   • 60 % → Expected Payout (goes to farmers when trigger fires)
@@ -95,7 +94,7 @@ Premium breakdown (approximate):
   • Features: heat days at 30/35/38 °C thresholds, maximum summer temperature,
     heatwave streak length, growing-degree days (GDD), spring frost days,
     severe frost days, minimum spring temperature, annual precipitation,
-    summer precipitation, dry days, maximum consecutive dry days, NDVI
+    summer precipitation, dry days, maximum consecutive dry days
   • Models trained:
       ─ Logistic Regression: ROC AUC 0.956, F1 0.932 on chronological holdout
       ─ Random Forest:       ROC AUC 0.974, F1 0.927 on chronological holdout
