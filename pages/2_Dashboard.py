@@ -92,7 +92,7 @@ if sub_df.empty:
     st.warning("No model history is available for this risk profile.")
     st.stop()
 
-TRIGGER_THRESHOLD = 14
+TRIGGER_THRESHOLD = 5
 
 year_df = (
     sub_df.groupby("year", as_index=False)

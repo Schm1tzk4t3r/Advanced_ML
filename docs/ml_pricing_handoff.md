@@ -140,7 +140,7 @@ Instead:
 1. It filters historical location-year rows to the selected subregion.
 2. If elevation is provided, it weights historical rows by elevation similarity.
 3. It calculates the relevant historical trigger frequency:
-   - heat: anomalous heat trigger;
+   - heat: severe heat trigger (`heat_days_38 >= 5`);
    - frost: spring severe frost trigger;
    - drought: dry-spell trigger;
    - both: combined climate-stress label.
@@ -151,7 +151,7 @@ risk_probability = 0.70 * historical_trigger_rate
                  + 0.30 * model_stress_probability
 ```
 
-This gives us a defensible estimate for quote pricing while keeping the AI component real and explainable.
+For narrow heat and frost coverage, the model component is capped against the hazard-specific trigger rate so the quote is not inflated by the broader combined stress label. This gives us a defensible estimate for quote pricing while keeping the AI component real and explainable.
 
 ## Premium Formula
 

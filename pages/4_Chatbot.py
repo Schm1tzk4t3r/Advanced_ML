@@ -54,7 +54,7 @@ FAQ: dict[str, str] = {
     "what is a trigger": (
         "A trigger is the **objective climate condition** that activates automatic payment.\n\n"
         "**Examples:**\n"
-        "- Heat: 14 consecutive days above 38°C during veraison (July–August)\n"
+        "- Heat: at least 5 days above 38°C during the growing season\n"
         "- Frost: 3 days below -2°C during budbreak/flowering (spring)\n"
         "- Combined: any of the above\n\n"
         "Triggers are **specific, measurable, and checked automatically** using official weather data. "

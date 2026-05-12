@@ -27,6 +27,7 @@ We used Codex/ChatGPT as a coding and review assistant. The tool helped inspect 
 - We added a **GroupKFold by location** robustness check to test whether the model generalizes across vineyard sites.
 - We framed the target honestly as a **climate-trigger proxy**, not a real claims/loss label.
 - We designed the quote-time backend so it does not pretend to know future weather. It estimates risk from historical trigger rates and model scores on comparable historical rows.
+- During final review, we corrected the heat payout trigger so the backend, dashboard, and FAQ use the same severe-event definition: at least 5 days above 38 C. This keeps the trigger close to the business case's ~8% severe-event calibration instead of pricing heat coverage from the broader climate-stress label.
 
 ## What Was Checked
 

@@ -1,37 +1,37 @@
-location_id,name,subregion,latitude,longitude,elevation_m,weather_data_available
-BC01,Vale do Corgo Norte,Baixo Corgo,41.1645,-7.912,145,True
-BC02,Encosta de Mesão Frio,Baixo Corgo,41.1382,-7.9015,285,True
-BC03,Terraço do Régua Norte,Baixo Corgo,41.1748,-7.7905,110,True
-BC04,Margem Sul do Régua,Baixo Corgo,41.151,-7.7823,210,True
-BC05,Ribeira de Covelinhas,Baixo Corgo,41.183,-7.738,88,True
-BC06,Planalto de Godim,Baixo Corgo,41.1672,-7.7295,420,True
-BC07,Serra da Lamego,Baixo Corgo,41.1125,-7.8235,530,True
-BC08,Vale Meão de Lamego,Baixo Corgo,41.129,-7.808,380,True
-BC09,Encosta de Resende,Baixo Corgo,41.0925,-7.935,340,True
-BC10,Alto de Resende,Baixo Corgo,41.074,-7.9185,695,True
-BC11,Ribeira da Teja,Baixo Corgo,41.1795,-7.7125,92,True
-BC12,Planalto de Tarouca,Baixo Corgo,41.0605,-7.7825,610,True
-CC01,Terraço do Pinhão Norte,Cima Corgo,41.192,-7.542,105,True
-CC02,Encosta de Sabrosa,Cima Corgo,41.2185,-7.5035,350,True
-CC03,Alto de Alijó,Cima Corgo,41.268,-7.472,580,False
-CC04,Margem Sul do Pinhão,Cima Corgo,41.1735,-7.538,175,True
-CC05,Terraço de São João,Cima Corgo,41.142,-7.4025,240,True
-CC06,Planalto de Pesqueira,Cima Corgo,41.126,-7.384,520,True
-CC07,Vale de Tabuaço,Cima Corgo,41.1165,-7.566,310,True
-CC08,Alto de Tabuaço,Cima Corgo,41.1042,-7.5495,625,True
-CC09,Terraço de Carrazeda,Cima Corgo,41.235,-7.2955,195,True
-CC10,Planalto de Ansiães,Cima Corgo,41.252,-7.262,450,True
-CC11,Encosta Sul de Alijó,Cima Corgo,41.242,-7.4385,480,True
-CC12,Terraço Baixo de Sabrosa,Cima Corgo,41.1985,-7.495,155,False
-CC13,Vale de Figueira,Cima Corgo,41.2095,-7.468,280,True
-CC14,Ervedosa do Douro,Cima Corgo,41.158,-7.363,135,True
-DS01,Terraço de Foz Côa,Douro Superior,41.0845,-7.151,165,True
-DS02,Alto de Foz Côa,Douro Superior,41.065,-7.1285,450,True
-DS03,Vale do Moncorvo,Douro Superior,41.1905,-7.0785,215,True
-DS04,Encosta de Moncorvo,Douro Superior,41.212,-7.0625,490,True
-DS05,Terraço de Freixo,Douro Superior,41.0605,-6.8215,125,False
-DS06,Encosta de Freixo,Douro Superior,41.0785,-6.842,380,True
-DS07,Planalto de Mêda,Douro Superior,40.9875,-7.2545,640,True
-DS08,Terraço de Vila Flor,Douro Superior,41.2985,-7.1525,280,True
-DS09,Pocinho Ribeira,Douro Superior,41.099,-7.1055,90,True
-DS10,Barca d'Alva Terraço,Douro Superior,41.0382,-7.0085,135,False
+location_id,name,subregion,latitude,longitude,elevation_m
+BC01,Vale do Corgo Norte,Baixo Corgo,41.1645,-7.912,145
+BC02,Encosta de Mesão Frio,Baixo Corgo,41.1382,-7.9015,285
+BC03,Terraço do Régua Norte,Baixo Corgo,41.1748,-7.7905,110
+BC04,Margem Sul do Régua,Baixo Corgo,41.151,-7.7823,210
+BC05,Ribeira de Covelinhas,Baixo Corgo,41.183,-7.738,88
+BC06,Planalto de Godim,Baixo Corgo,41.1672,-7.7295,420
+BC07,Serra da Lamego,Baixo Corgo,41.1125,-7.8235,530
+BC08,Vale Meão de Lamego,Baixo Corgo,41.129,-7.808,380
+BC09,Encosta de Resende,Baixo Corgo,41.0925,-7.935,340
+BC10,Alto de Resende,Baixo Corgo,41.074,-7.9185,695
+BC11,Ribeira da Teja,Baixo Corgo,41.1795,-7.7125,92
+BC12,Planalto de Tarouca,Baixo Corgo,41.0605,-7.7825,610
+CC01,Terraço do Pinhão Norte,Cima Corgo,41.192,-7.542,105
+CC02,Encosta de Sabrosa,Cima Corgo,41.2185,-7.5035,350
+CC03,Alto de Alijó,Cima Corgo,41.268,-7.472,580
+CC04,Margem Sul do Pinhão,Cima Corgo,41.1735,-7.538,175
+CC05,Terraço de São João,Cima Corgo,41.142,-7.4025,240
+CC06,Planalto de Pesqueira,Cima Corgo,41.126,-7.384,520
+CC07,Vale de Tabuaço,Cima Corgo,41.1165,-7.566,310
+CC08,Alto de Tabuaço,Cima Corgo,41.1042,-7.5495,625
+CC09,Terraço de Carrazeda,Cima Corgo,41.235,-7.2955,195
+CC10,Planalto de Ansiães,Cima Corgo,41.252,-7.262,450
+CC11,Encosta Sul de Alijó,Cima Corgo,41.242,-7.4385,480
+CC12,Terraço Baixo de Sabrosa,Cima Corgo,41.1985,-7.495,155
+CC13,Vale de Figueira,Cima Corgo,41.2095,-7.468,280
+CC14,Ervedosa do Douro,Cima Corgo,41.158,-7.363,135
+DS01,Terraço de Foz Côa,Douro Superior,41.0845,-7.151,165
+DS02,Alto de Foz Côa,Douro Superior,41.065,-7.1285,450
+DS03,Vale do Moncorvo,Douro Superior,41.1905,-7.0785,215
+DS04,Encosta de Moncorvo,Douro Superior,41.212,-7.0625,490
+DS05,Terraço de Freixo,Douro Superior,41.0605,-6.8215,125
+DS06,Encosta de Freixo,Douro Superior,41.0785,-6.842,380
+DS07,Planalto de Mêda,Douro Superior,40.9875,-7.2545,640
+DS08,Terraço de Vila Flor,Douro Superior,41.2985,-7.1525,280
+DS09,Pocinho Ribeira,Douro Superior,41.099,-7.1055,90
+DS10,Barca d'Alva Terraço,Douro Superior,41.0382,-7.0085,135

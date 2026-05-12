@@ -71,6 +71,8 @@ FEATURE_COLUMNS = CATEGORICAL_FEATURES + NUMERIC_FEATURES
 TRAIN_END_YEAR = 2019
 TEST_START_YEAR = 2020
 RANDOM_STATE = 42
+HEAT_TRIGGER_DAYS_38 = 5
+N_JOBS = 1
 
 
 def load_dataset() -> pd.DataFrame:
@@ -89,9 +91,8 @@ def add_trigger_diagnostics(df: pd.DataFrame) -> pd.DataFrame:
     frost, drought, and combined coverage from historical trigger behavior.
     """
     df = df.copy()
-    heat_p80 = df.groupby("location_id")["heat_days_35"].transform(lambda x: x.quantile(0.80))
     dry_p80 = df.groupby("location_id")["max_consecutive_dry_days"].transform(lambda x: x.quantile(0.80))
-    df["heat_trigger"] = (df["heat_days_35"] >= heat_p80).astype(int)
+    df["heat_trigger"] = (df["heat_days_38"] >= HEAT_TRIGGER_DAYS_38).astype(int)
     df["frost_trigger"] = (df["spring_severe_frost_days"] >= 3).astype(int)
     df["drought_trigger"] = (df["max_consecutive_dry_days"] >= dry_p80).astype(int)
     return df
@@ -137,7 +138,7 @@ def make_models() -> dict[str, Pipeline]:
                         min_samples_leaf=5,
                         class_weight="balanced_subsample",
                         random_state=RANDOM_STATE,
-                        n_jobs=-1,
+                        n_jobs=N_JOBS,
                     ),
                 ),
             ]
@@ -183,7 +184,7 @@ def compute_feature_importance(model: Pipeline, x_test: pd.DataFrame, y_test: pd
         n_repeats=20,
         scoring="roc_auc",
         random_state=RANDOM_STATE,
-        n_jobs=-1,
+        n_jobs=N_JOBS,
     )
     permuted = pd.DataFrame(
         {
@@ -319,7 +320,7 @@ def train_and_evaluate() -> dict[str, Any]:
         groups=df["location_id"],
         cv=group_cv,
         scoring="roc_auc",
-        n_jobs=-1,
+        n_jobs=N_JOBS,
     )
     metrics["models"]["random_forest"]["group_kfold_location_roc_auc"] = {
         "mean": round(float(np.mean(cv_scores)), 4),

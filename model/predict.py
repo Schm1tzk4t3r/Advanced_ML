@@ -57,7 +57,7 @@ PRICING_CONFIG: dict[str, PricingConfig] = {
         admin_margin=0.15,
         platform_fee_eur=50.0,
         per_hectare_admin_eur=2.0,
-        trigger_threshold="14 days above 38 C during veraison (July-August)",
+        trigger_threshold="At least 5 days above 38 C during the growing season",
     ),
     "Frost": PricingConfig(
         loss_given_trigger=0.40,
@@ -204,7 +204,7 @@ def _risk_components(history: pd.DataFrame, weights: np.ndarray, risk_type: str)
 
     if risk_type == "Heat":
         historical = heat_history
-        model_component = stress_model
+        model_component = min(stress_model, max(heat_history * 1.50, 0.02))
     elif risk_type == "Frost":
         historical = frost_history
         model_component = min(stress_model, max(frost_history * 1.25, 0.02))
