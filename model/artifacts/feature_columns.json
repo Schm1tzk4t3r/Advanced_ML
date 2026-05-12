@@ -1,0 +1,20 @@
+[
+  "subregion",
+  "elevation_m",
+  "latitude",
+  "longitude",
+  "heat_days_30",
+  "heat_days_35",
+  "heat_days_38",
+  "max_summer_tmax",
+  "mean_summer_tmax",
+  "heatwave_max_streak",
+  "gdd_growing_season",
+  "spring_frost_days",
+  "spring_severe_frost_days",
+  "min_spring_tmin",
+  "annual_precip_mm",
+  "summer_precip_mm",
+  "dry_days",
+  "max_consecutive_dry_days"
+]

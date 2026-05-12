@@ -4,7 +4,7 @@
 
 ## Description
 
-VinhaGuard AI is a parametric climate insurance prototype for small wine producers in the Douro Valley, built for the Advanced Topics in Machine Learning course at Nova SBE. The platform uses 30+ years of historical climate data from 36 Douro vineyard sites to train a risk model (Logistic Regression and XGBoost) that estimates the probability of a climate stress event — heat stress or spring frost — in a given location-year. Payouts are triggered automatically by objective climate thresholds, with no adjusters and no paperwork. A Streamlit app exposes the risk assessment, dashboard, pricing explainer, and FAQ chatbot.
+VinhaGuard AI is a parametric climate insurance prototype for small wine producers in the Douro Valley, built for the Advanced Topics in Machine Learning course at Nova SBE. The platform uses 30+ years of historical climate data from 32 Douro vineyard sites to train a risk model (Logistic Regression baseline and Random Forest main model) that estimates the probability of a climate stress event — heat stress, spring frost, or drought — in a given location-year. Payouts are triggered automatically by objective climate thresholds, with no adjusters and no paperwork. A Streamlit app exposes the risk assessment, dashboard, pricing explainer, and FAQ chatbot.
 
 ## Data pipeline
 
@@ -36,7 +36,8 @@ locations      →  fetch_weather  →  build_features  →  make_dataset
 | Artifact | For | Notes |
 |---|---|---|
 | `data/processed/vinhaguard_dataset.parquet` | Person 3 (ML training), Person 4 (Streamlit demo) | Canonical dataset — 960 rows × 21 columns (32 locations × 30 years). Target column: `climate_stress_year` (39.8% positive class). |
-| `data/processed/douro_climate.parquet` | Person 4 (existing demo only) | **Legacy synthetic placeholder.** Kept solely for backward compatibility with `pages/2_Dashboard.py` until it is migrated to `vinhaguard_dataset.parquet`. Do not use for model training or evaluation. |
+| `model/artifacts/scored_history.csv` | Person 3 (ML backend), Person 4 (dashboard) | Rich scored history used by the current dashboard — 960 rows x 25 columns, including trigger indicators and model stress probabilities. |
+| `data/processed/douro_climate.parquet` | Legacy demo archive only | **Legacy synthetic placeholder.** Do not use for model training, evaluation, or the final dashboard. |
 
 ## How to reproduce
 
@@ -57,3 +58,19 @@ python -m src.data.make_dataset
 # 3. Launch the Streamlit app
 streamlit run app.py
 ```
+
+## ML and pricing backend
+
+Person 3's ML deliverable is implemented in `model/train.py` and `model/predict.py`.
+
+```bash
+python -m model.train
+```
+
+This trains the Logistic Regression baseline and Random Forest main model, writes `model/artifacts/risk_model.joblib`, exports metrics to `model/artifacts/metrics.json`, and creates evaluation charts in `docs/figures/`. The deployable `predict_risk_and_premium()` backend uses the trained model plus historical trigger rates to return risk probability, premium, basis-risk estimate, feature importance, and pricing breakdown.
+
+The trained model has three canonical IVDP risk profiles: Baixo Corgo, Cima Corgo, and Douro Superior. The demo labels Pinhao, Regua, and Vila Nova de Foz Coa are mapped transparently to those profiles in the backend and dashboard.
+
+Reference docs:
+- [`docs/ml_pricing_handoff.md`](docs/ml_pricing_handoff.md)
+- [`docs/genai_log_person3.md`](docs/genai_log_person3.md)

@@ -1,101 +1,245 @@
+import os
 import streamlit as st
+from google import genai
+from google.genai import types
 
-st.set_page_config(page_title="Chatbot – VinhaGuard", page_icon="🍷", layout="wide")
+# ── System prompt ─────────────────────────────────────────────────────────────
+SYSTEM_PROMPT = """
+You are the VinhaGuard AI Assistant — the official customer support agent for VinhaGuard,
+a parametric climate insurance platform for small wine producers in Portugal's Douro Valley.
 
-DISCLAIMER = (
-    "_Este chatbot fornece apenas informações gerais. "
-    "Consulte um consultor de seguros para aconselhamento vinculativo._"
+════════════════════════════════════════════
+GUARDRAILS — STRICT
+════════════════════════════════════════════
+You ONLY answer questions about:
+  • VinhaGuard's insurance product, coverage, pricing, and technology
+  • Parametric insurance concepts in general
+  • Climate risk in the Douro Valley wine region
+  • How to use the VinhaGuard app (risk assessment, dashboard, pricing tools)
+
+If the user asks about anything else — politics, health, coding, general finance,
+other companies, personal advice, etc. — politely decline with one sentence and
+redirect them to VinhaGuard-related topics. Example response for off-topic:
+"I can only help with VinhaGuard insurance questions — is there anything about
+our coverage or pricing I can clarify for you?"
+
+Never pretend to be a general-purpose assistant.
+
+════════════════════════════════════════════
+PRODUCT KNOWLEDGE
+════════════════════════════════════════════
+
+── What is VinhaGuard? ──────────────────────
+VinhaGuard is a parametric climate insurance prototype designed for small Douro Valley
+wine producers who currently have no affordable, trustworthy way to insure their harvests
+against extreme weather. Unlike traditional insurance, VinhaGuard pays out automatically
+when an objective climate threshold (the "trigger") is exceeded — no adjusters, no
+paperwork, no disputes.
+
+Current status: Academic prototype built for the Nova SBE Advanced Machine Learning
+course. It is NOT yet a licensed insurance product. Always be transparent about this.
+
+── Parametric Insurance — Core Concept ─────
+Traditional insurance asks "Did you lose money?" and sends an inspector.
+Parametric insurance asks "Did climate conditions hit the agreed trigger?" and pays automatically.
+
+Key terms:
+• Trigger: The specific climate condition that activates the payout (e.g., 5 heat days above 38 °C)
+• Payout speed: < 72 hours after trigger confirmation — no claim forms needed
+• Basis risk: The unavoidable gap between when the trigger fires and when the farmer
+  actually suffers a loss. VinhaGuard discloses this honestly (typically 8–22%).
+
+── Covered Sub-regions ─────────────────────
+Users can select from 6 Douro sub-regions, but there are 3 distinct risk profiles
+(the app aliases 3 locations to their closest canonical profile):
+
+  Canonical profiles:
+    • Baixo Corgo  — Maritime influence, milder climate
+    • Cima Corgo   — Historically more challenging, centre of the region
+    • Douro Superior — Hottest and driest; most continental climate, highest climate exposure
+
+  Aliases (map to canonical profiles for pricing):
+    • Pinhão          → Cima Corgo profile
+    • Régua           → Baixo Corgo profile
+    • Vila Nova de Foz Côa → Douro Superior profile
+
+── Coverage Types & Triggers ───────────────
+  • Heat:     At least 5 days above 38 °C during the growing season
+              Expected loss if triggered: 50 % of insured value
+  • Frost:    3 spring days below −2 °C during budbreak/flowering
+              Expected loss if triggered: 40 % of insured value
+  • Drought:  Dry-spell length above the vineyard's historical 80th percentile
+              Expected loss if triggered: 45 % of insured value
+  • Both/Combined: Heat, frost, or drought trigger fires
+              Expected loss if triggered: 55 % of insured value
+              Risk loading: 30 % (higher due to multiple hazards)
+
+── Premium Pricing Formula ─────────────────
+Premium = (Expected Payout + Risk Loading Amount + Admin Cost) × (1 + Admin Margin)
+
+Where:
+  • Expected Payout  = Insured Value × Risk Probability × Loss-Given-Trigger
+  • Risk Probability = 70 % historical trigger rate + 30 % AI model output
+  • Risk Loading Amount = Expected Payout × Risk Loading % (≈ 25 % base)
+  • Admin Cost = €50 flat fee + €2 per hectare per year
+  • Admin Margin = 15 %
+
+Premium breakdown (approximate):
+  • 60 % → Expected Payout (goes to farmers when trigger fires)
+  • 25 % → Risk Loading (model uncertainty + reinsurance buffer)
+  • 15 % → Admin & Platform Operations
+
+── AI / Machine Learning Model ─────────────
+  • Training data: 960 rows, 32 locations across the Douro Valley, years 1995–2024
+  • Features: heat days at 30/35/38 °C thresholds, maximum summer temperature,
+    heatwave streak length, growing-degree days (GDD), spring frost days,
+    severe frost days, minimum spring temperature, annual precipitation,
+    summer precipitation, dry days, maximum consecutive dry days
+  • Models trained:
+      ─ Logistic Regression: ROC AUC 0.956, F1 0.932 on chronological holdout
+      ─ Random Forest:       ROC AUC 0.974, F1 0.927 on chronological holdout
+  • Split: chronological holdout (train 1995–2019, test 2020–2024) — no data leakage
+  • Cross-validation: Group K-Fold by location, mean ROC AUC 0.936 ± 0.053
+  • At quote time: predictions are based on historical climatology, not future
+    weather forecasts (the season has not happened yet)
+
+── Basis Risk — Full Explanation ───────────
+Basis risk is inherent in all parametric insurance. It means:
+  • Scenario A: Trigger fires, but the farmer suffers no real loss
+    → Farmer keeps the payout (a windfall)
+  • Scenario B: Farmer suffers real losses, but trigger does not fire
+    → Farmer receives nothing (the dangerous scenario)
+
+VinhaGuard's estimated basis risk ranges from 8 % to 22 % depending on how
+closely the trigger threshold matches the farmer's actual microclimate.
+Higher elevation divergence from the regional median increases basis risk.
+VinhaGuard discloses basis risk on every quote — we do not hide it.
+
+── Payment & Cancellation ───────────────────
+  • Payout: Trigger fires → 72-hour processing → funds deposited to bank account
+  • Cancellation: Any time, pro-rated refund for unused coverage days
+  • No lock-in, no penalties, no minimum term
+
+── Limitations (always be honest) ──────────
+  • This is an academic prototype — not a licensed insurance product
+  • Basis risk cannot be fully eliminated
+  • Currently covers only the Douro Valley, Portugal
+  • Pinhão, Régua, and Vila Nova de Foz Côa share profiles with canonical subregions
+
+════════════════════════════════════════════
+TONE & BEHAVIOUR
+════════════════════════════════════════════
+• Be clear, professional, and concise
+• Never make promises beyond what the product offers
+• Always mention the academic prototype status when asked if this is a real product
+• When explaining numbers, be specific (e.g., cite ROC AUC 0.974, not "very accurate")
+• If you genuinely don't know an answer, say so rather than making something up
+• Keep responses focused — no filler, no excessive disclaimers beyond what is necessary
+""".strip()
+
+GEMINI_MODEL = "gemini-2.5-flash-lite"
+
+# ── API client setup ──────────────────────────────────────────────────────────
+
+@st.cache_resource
+def get_client() -> genai.Client | None:
+    api_key = (
+        st.secrets.get("GEMINI_API_KEY")
+        or os.environ.get("GEMINI_API_KEY")
+    )
+    if not api_key:
+        return None
+    return genai.Client(api_key=api_key)
+
+
+def build_history(messages: list[dict]) -> list[types.Content]:
+    """Convert Streamlit session messages to Gemini Content objects."""
+    contents = []
+    for msg in messages:
+        role = "user" if msg["role"] == "user" else "model"
+        contents.append(
+            types.Content(role=role, parts=[types.Part(text=msg["content"])])
+        )
+    return contents
+
+
+# ── Page UI ───────────────────────────────────────────────────────────────────
+
+st.title("AI Assistant")
+st.markdown(
+    "Ask anything about VinhaGuard — coverage, pricing, triggers, "
+    "basis risk, or how the AI model works."
 )
-
-FAQ: dict[str, str] = {
-    "o que e seguro parametrico": (
-        "Um seguro paramétrico paga automaticamente quando um indicador climático objetivo "
-        "— como dias acima de 38°C ou geadas — ultrapassa um limiar pré-acordado. "
-        "Não é necessário perito ou inspeção à exploração."
-    ),
-    "quando recebo o pagamento": (
-        "O pagamento é acionado automaticamente quando os dados climáticos oficiais confirmam "
-        "que o gatilho foi ativado. O processamento demora normalmente menos de 72 horas."
-    ),
-    "o que e risco de base": (
-        "O risco de base ocorre quando o gatilho é ativado mas a sua vinha não sofreu perdas reais, "
-        "ou quando sofreu perdas mas o gatilho não foi ativado. "
-        "A VinhaGuard minimiza este risco calibrando os gatilhos com dados históricos de 30+ anos."
-    ),
-    "como e calculado o premio": (
-        "O prémio é calculado com base na probabilidade de risco estimada pelo nosso modelo de IA, "
-        "no valor segurado, nas perdas históricas quando o gatilho dispara, e numa margem de risco "
-        "e custos administrativos. Consulte a página 'Pricing Explainer' para detalhes."
-    ),
-    "posso cancelar": (
-        "Sim, pode cancelar a apólice a qualquer momento. Consulte as condições gerais da apólice "
-        "para detalhes sobre reembolsos proporcionais."
-    ),
-    "quais sao as sub regioes cobertas": (
-        "A VinhaGuard cobre seis sub-regiões do Douro: Baixo Corgo, Cima Corgo, Douro Superior, "
-        "Pinhão, Régua e Vila Nova de Foz Côa."
-    ),
-    "o que e um gatilho": (
-        "O gatilho é a condição climática objetiva que, quando atingida, ativa o pagamento automático. "
-        "Por exemplo: 14 dias consecutivos acima de 38°C durante a véraison, ou 3 dias com geada "
-        "abaixo de -2°C durante a floração."
-    ),
-    "como funciona": (
-        "Seleciona a sua sub-região, área da vinha e valor segurado. O nosso modelo de IA estima "
-        "a probabilidade de risco climático e calcula o prémio. Se o gatilho disparar durante a época, "
-        "o pagamento é processado automaticamente — sem papelada."
-    ),
-}
-
-
-def faq_lookup(user_input: str) -> str | None:
-    normalized = (
-        user_input.lower()
-        .replace("é", "e").replace("ê", "e").replace("à", "a").replace("ã", "a")
-        .replace("ç", "c").replace("ó", "o").replace("ô", "o").replace("ú", "u")
-        .replace("í", "i").replace("á", "a").replace("â", "a")
-        .replace("?", "").replace("!", "").replace(",", "").strip()
-    )
-    for key, answer in FAQ.items():
-        if any(word in normalized for word in key.split()):
-            return answer
-    return None
-
-
-def chatbot_respond(user_input: str) -> str:
-    answer = faq_lookup(user_input)
-    if answer:
-        return answer
-    return (
-        "Desculpe, não tenho uma resposta para essa pergunta no momento. "
-        "Por favor contacte a nossa equipa para mais informações sobre a VinhaGuard."
-    )
-
-
-st.title("Assistente VinhaGuard")
-st.markdown(DISCLAIMER)
 st.markdown("---")
 
-st.markdown("""
-**Perguntas frequentes / Suggested questions:**
-- O que é um seguro paramétrico?
-- Quando recebo o pagamento?
-- O que é o risco de base?
-- Como é calculado o prémio?
-- Posso cancelar?
-""")
+client = get_client()
 
+if client is None:
+    st.error(
+        "**Gemini API key not configured.**\n\n"
+        "1. Copy `.streamlit/secrets.toml.example` → `.streamlit/secrets.toml`\n"
+        "2. Paste your Gemini API key into that file\n"
+        "3. Restart the app"
+    )
+    st.code(
+        '# .streamlit/secrets.toml\nGEMINI_API_KEY = "your-key-here"',
+        language="toml",
+    )
+    st.stop()
+
+# Chat history in session state
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+# Render existing messages
 for msg in st.session_state.messages:
-    st.chat_message(msg["role"]).write(msg["content"])
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
 
-if prompt := st.chat_input("Faça a sua pergunta em Português..."):
+# Input
+if prompt := st.chat_input("Ask a question about VinhaGuard…"):
     st.session_state.messages.append({"role": "user", "content": prompt})
-    st.chat_message("user").write(prompt)
+    with st.chat_message("user"):
+        st.markdown(prompt)
 
-    reply = chatbot_respond(prompt)
-    full_reply = f"{reply}\n\n{DISCLAIMER}"
+    # Build Gemini conversation history (all turns except the one we just added)
+    history = build_history(st.session_state.messages[:-1])
+    history.append(
+        types.Content(role="user", parts=[types.Part(text=prompt)])
+    )
+
+    with st.chat_message("assistant"):
+        response_box = st.empty()
+        full_reply = ""
+        try:
+            stream = client.models.generate_content_stream(
+                model=GEMINI_MODEL,
+                contents=history,
+                config=types.GenerateContentConfig(
+                    system_instruction=SYSTEM_PROMPT,
+                    temperature=0.3,
+                    max_output_tokens=1024,
+                ),
+            )
+            for chunk in stream:
+                if chunk.text:
+                    full_reply += chunk.text
+                    response_box.markdown(full_reply + "▌")
+            response_box.markdown(full_reply)
+        except Exception as e:
+            full_reply = f"Sorry, I encountered an error: {e}"
+            response_box.markdown(full_reply)
+
     st.session_state.messages.append({"role": "assistant", "content": full_reply})
-    st.chat_message("assistant").write(full_reply)
+
+# Clear button
+if st.session_state.messages:
+    if st.button("Clear conversation", type="secondary"):
+        st.session_state.messages = []
+        st.rerun()
+
+st.markdown("---")
+st.caption(
+    "VinhaGuard AI Assistant · Powered by Gemini 2.5 Flash Lite · "
+    "Responses are informational only — this is an academic prototype, not a licensed insurance product."
+)

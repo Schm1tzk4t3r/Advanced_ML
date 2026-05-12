@@ -19,7 +19,7 @@
 | `longitude` | `float64` | decimal degrees (WGS84) | Site longitude, west-negative (all sites in Portugal). | Hand-curated | 4 decimal places. |
 | `heat_days_30` | `int64` | days | Number of days in the calendar year where daily maximum temperature (tmax) ≥ 30 °C. | Open-Meteo ERA5 | Full-year window (Jan–Dec). |
 | `heat_days_35` | `int64` | days | Number of days in the calendar year where tmax ≥ 35 °C. | Open-Meteo ERA5 | Used as condition (a) in `climate_stress_year` label; threshold is the per-location 80th percentile. |
-| `heat_days_38` | `int64` | days | Number of days in the calendar year where tmax ≥ 38 °C. | Open-Meteo ERA5 | Aligns with the parametric trigger threshold used in the Streamlit demo (14 days ≥ 38 °C during véraison). |
+| `heat_days_38` | `int64` | days | Number of days in the calendar year where tmax ≥ 38 °C. | Open-Meteo ERA5 | Aligns with the severe heat payout trigger used in the Streamlit demo (`heat_days_38 >= 5`). |
 | `max_summer_tmax` | `float64` | °C | Maximum daily maximum temperature over June–August (JJA). | Open-Meteo ERA5 | Core véraison heat indicator. NaN if no JJA data. |
 | `mean_summer_tmax` | `float64` | °C | Mean of daily maximum temperatures over June–August (JJA). | Open-Meteo ERA5 | JJA window (months 6–8). |
 | `heatwave_max_streak` | `int64` | days | Longest consecutive run of days with tmax ≥ 35 °C in the calendar year. | Open-Meteo ERA5 | 0 if no day reaches threshold. Full-year window. |
