@@ -21,12 +21,13 @@ Shape:
 - 960 location-year rows
 - 32 vineyard locations
 - 30 years, 1995-2024
+- 29 columns: 20 original annual weather/geography fields, 8 TerraClimate water-balance fields, and the target
 - target: `climate_stress_year`
 - positive class share: 39.8%
 
-The target is a climate-trigger proxy, not a real claims/loss label. It is derived from anomalous heat, spring frost, and drought conditions. This is acceptable for a course MVP, but production deployment would require insurer claims, vineyard yields, station calibration, and/or NDVI validation.
+The target is a climate-trigger proxy, not a real claims/loss label. It is derived from anomalous heat, spring frost, and drought conditions. The model now also receives TerraClimate water-balance features (`vpd`, `def`, `soil`, `ppt`) so the drought signal is not only a daily rainfall-count assumption. This is acceptable for a course MVP, but production deployment would require insurer claims, vineyard yields, station calibration, and/or NDVI validation.
 
-**Honest caveat on the high AUC:** Because `climate_stress_year` is a deterministic function of the same ERA5 features used as model inputs, the model is partly learning to recover its own label rule from noisy inputs rather than discovering independent predictive signal. The high ROC-AUC (0.974) should therefore be interpreted as confirming that the engineered features faithfully encode the label logic — not as evidence of out-of-sample predictive power over actual crop losses. The known-year validation table (2003, 2005, 2017, 2022, 2024 all correctly identified as extreme) is the more meaningful real-world check.
+**Honest caveat on the high AUC:** Because `climate_stress_year` is a deterministic function of the same ERA5 features used as model inputs, the model is partly learning to recover its own label rule from noisy inputs rather than discovering independent predictive signal. The high ROC-AUC (0.970) should therefore be interpreted as confirming that the engineered features faithfully encode the label logic — not as evidence of out-of-sample predictive power over actual crop losses. The known-year validation table (2003, 2005, 2017, 2022, 2024 all correctly identified as extreme) is the more meaningful real-world check.
 
 ## Models
 
@@ -82,28 +83,28 @@ Chronological holdout, trained on 1995-2019 and tested on 2020-2024:
 
 | Model | ROC-AUC | PR-AUC | Brier | Accuracy | Precision | Recall | F1 |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| Logistic Regression | 0.956 | 0.986 | 0.071 | 0.906 | 0.981 | 0.887 | 0.932 |
-| Random Forest | 0.974 | 0.987 | 0.094 | 0.900 | 0.971 | 0.887 | 0.927 |
+| Logistic Regression | 0.949 | 0.984 | 0.071 | 0.913 | 0.963 | 0.913 | 0.938 |
+| Random Forest | 0.970 | 0.986 | 0.115 | 0.881 | 0.971 | 0.861 | 0.912 |
 
 Random Forest was selected as the deployed model because it gives the strongest ranking performance on the recent chronological holdout and captures non-linear interactions between drought, heat, frost, and geography. Logistic Regression remains a strong baseline and has the better Brier score, which should be mentioned honestly if discussing calibration.
 
 Additional robustness check:
 
-- GroupKFold by `location_id`, Random Forest ROC-AUC: 0.936 mean, 0.053 std across five folds.
+- GroupKFold by `location_id`, Random Forest ROC-AUC: 0.937 mean, 0.055 std across five folds.
 - One fold scores 0.833 against the others at 0.95+. This is expected when that fold's held-out locations form a geographically atypical cluster (e.g., a batch of high-elevation DS or low-elevation BC sites). It does not indicate overfitting — it shows the model is less certain when extrapolating to unfamiliar elevation/longitude combinations, which is also what the basis-risk logic captures.
 
 Top feature drivers from permutation importance:
 
 1. `max_consecutive_dry_days`
 2. `heatwave_max_streak`
-3. `heat_days_35`
-4. `min_spring_tmin`
-5. `elevation_m`
-6. `longitude`
-7. `annual_precip_mm`
-8. `spring_severe_frost_days`
+3. `elevation_m`
+4. `heat_days_35`
+5. `spring_severe_frost_days`
+6. `tc_def_growing_sum`
+7. `summer_precip_mm`
+8. `min_spring_tmin`
 
-Interpretation: drought persistence is the strongest stress-year signal in the current label design, followed by heatwave duration and anomalous heat. Frost is present but rarer, which is why its standalone pricing probability is lower.
+Interpretation: drought persistence is still the strongest stress-year signal in the current label design, followed by heatwave duration. TerraClimate's growing-season water deficit now appears among the model drivers, which supports the product story that we are modelling physiologically meaningful water stress, not only counting hot or dry days. Frost is present but rarer, which is why its standalone pricing probability is lower.
 
 ## Pricing Backend
 
@@ -193,7 +194,7 @@ python -c "from model.predict import predict_risk_and_premium; print(predict_ris
 
 ## Presentation Talking Points
 
-- "We use AI where it matters: estimating and explaining climate-trigger probability from historical weather-derived features."
+- "We use AI where it matters: estimating and explaining climate-trigger probability from historical weather, water-balance, and geography features."
 - "Pricing itself is transparent expected-value logic, not a black box."
 - "The ML target is a climate-trigger proxy, so we are honest that production would require claims/yield validation."
 - "The main moat is not a chatbot. It is the domain-specific climate feature pipeline, historical trigger backtesting, pricing workflow, and insurer/cooperative integration."

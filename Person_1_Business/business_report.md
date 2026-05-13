@@ -48,7 +48,7 @@ The risk model reveals a clear sub-regional exposure gradient. Importantly, the 
 | Cima Corgo | 55% | Intermediate |
 | Douro Superior | 72% | Hottest and driest (~596 mm/year) — most exposed |
 
-*Note: these probabilities reflect the prototype model (`model/predict.py`), grounded in the real dataset statistics from `data/processed/vinhaguard_dataset.parquet`. Person 3's trained LR/XGBoost classifier is now implemented and provides the ML backend for risk probability estimation.*
+*Note: these probabilities reflect the prototype model (`model/predict.py`), grounded in the real dataset statistics from `data/processed/vinhaguard_dataset.parquet`. Person 3's trained Logistic Regression / Random Forest backend is now implemented and provides the ML backend for risk probability estimation.*
 
 Smaller producers in Douro Superior face the highest exposure but the least capacity to absorb a bad year. They are the most underserved by traditional insurance.
 
@@ -86,7 +86,7 @@ A sceptical reviewer might ask: can a fixed rule and a historical probability ta
 
 **3. Premium calibration depends on calibrated trigger probabilities.** The premium formula (`Expected Loss = IV × P(trigger) × LGT`) is only as credible as the P(trigger) estimate. Using the full stress classification rate (45–72%) as a direct proxy for trigger probability produces premiums that are commercially unviable (35–57% of insured value). The system's value is in calibrating P(trigger) to severe events only (~8–12%), informed by the dataset's learned threshold distributions and validated against known extreme years.
 
-**Current prototype status:** The risk probability outputs come from Person 3's trained Random Forest classifier (ROC-AUC 0.974 on a chronological 2020–2024 holdout), blended 70/30 with historical trigger rates. The full pipeline — data, feature engineering, ML model, premium formula, and Streamlit app — is implemented and deployed.
+**Current prototype status:** The risk probability outputs come from Person 3's trained Random Forest classifier (ROC-AUC 0.970 on a chronological 2020–2024 holdout), blended 70/30 with historical trigger rates. The full pipeline — data, feature engineering, TerraClimate water-balance enrichment, ML model, premium formula, and Streamlit app — is implemented and deployed.
 
 The Portuguese-language interface and explainability assistant are secondary features. The core AI value is risk calibration, vineyard-specific pricing, and basis-risk reduction.
 
@@ -115,7 +115,7 @@ The model output therefore serves two distinct purposes:
 | Layer | Components | Status |
 |---|---|---|
 | **Input** | Vineyard coordinates, sub-region, historical ERA5 features (heat, frost, drought) | ✅ Implemented |
-| **Risk model** | Climate stress classification; trigger probability estimation; premium input generation | ✅ Person 3's trained LR/XGBoost classifier |
+| **Risk model** | Climate stress classification; trigger probability estimation; premium input generation | ✅ Person 3's trained LR/Random Forest classifier |
 | **Business logic** | Expected loss formula; risk loading; admin margin; platform revenue | ✅ Implemented |
 | **Frontend** | Risk dashboard; pricing explainer; trigger explanation; Portuguese assistant | ✅ Implemented |
 
@@ -283,11 +283,11 @@ All quantitative claims in this report are traceable to the codebase:
 |---|---|---|
 | 32 Douro vineyard sites | `data/locations.csv` | Hand-curated, IVDP-classified; 32 of 36 planned sites with complete ERA5 data |
 | 30 years ERA5 data (1995–2024) | Open-Meteo Historical API | Daily weather fetched per site via `src/data/fetch_weather.py` |
-| 960 rows × 21 columns | `data/processed/vinhaguard_dataset.parquet` | Verifiable: `pd.read_parquet('...').shape` → (960, 21) |
+| 960 rows × 29 columns | `data/processed/vinhaguard_dataset.parquet` | Verifiable: `pd.read_parquet('...').shape` → (960, 29) |
 | 39.8% stress years | `climate_stress_year` column | Share of rows with label = 1 across all 32 sites × 30 years |
 | 2022 = 100% sites stressed | Known-year validation table | All 32 sites labelled stress = 1 in 2022 (`docs/data_dictionary.md`) |
 | 72% Douro Superior stress rate | Dataset sub-regional analysis | Average stress classification rate for DS sites (DS01–DS10) |
-| 45%, 55%, 72% sub-regional rates | `model/predict.py` | Prototype mock values grounded in dataset; to be replaced by Person 3's classifier |
+| 45%, 55%, 72% sub-regional rates | Historical scored dataset / `model/predict.py` | Risk-profile examples grounded in model artifacts and historical trigger rates |
 | 8–22% basis-risk indicator | `model/predict.py` → `_basis_risk_pct()` | Dynamic estimate from subregion coverage depth and elevation distance |
 | ~8–12% trigger probability | Illustrative calibration | Narrower subset of stress years; exact value to be set by Person 3 + actuarial review |
 
@@ -297,12 +297,13 @@ All quantitative claims in this report are traceable to the codebase:
 |---|---|
 | ERA5 climate dataset (32 sites × 30 years, 960 rows) | ✅ Implemented |
 | 20-feature engineering pipeline | ✅ Implemented (`src/data/build_features.py`) |
+| TerraClimate water-balance enrichment | ✅ Implemented (`src/data/fetch_terraclimate.py`) |
 | Climate stress classification (rule-based, per-location) | ✅ Implemented (`src/data/make_dataset.py`) |
 | Premium calculator (matching app formula) | ✅ Implemented (`pages/3_Pricing_Explainer.py`) |
 | Streamlit app (4 pages: Risk, Dashboard, Pricing, Chatbot) | ✅ Implemented |
 | Portuguese-language interface | ✅ Implemented |
 | Trained ML risk model (LR / Random Forest) | ✅ Deployed — `model/artifacts/risk_model.joblib` |
-| Risk probability outputs | ✅ Live — Random Forest ROC-AUC 0.974, blended 70/30 with historical trigger rates |
+| Risk probability outputs | ✅ Live — Random Forest ROC-AUC 0.970, blended 70/30 with historical trigger rates |
 | Basis-risk estimation | ✅ Dynamic (8–22%) — `_basis_risk_pct()` in `model/predict.py` |
 | Live seasonal trigger monitoring | 🔄 Simulated in demo |
 | Insurer payout integration | 🔄 Future partner integration |

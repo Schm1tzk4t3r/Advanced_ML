@@ -8,8 +8,9 @@ Reads:
 Writes:
     data/interim/features_by_location_year.parquet
 
-Only locations with weather_data_available=True in locations.csv are processed.
-Locations missing a parquet file are silently skipped.
+If data/locations.csv contains weather_data_available, only True rows are
+processed. Otherwise, all locations with a matching raw weather parquet file
+are processed. Locations missing a parquet file are silently skipped.
 
 Quality control: location-year rows with fewer than 90% of expected daily
 observations are dropped before output.
@@ -92,11 +93,15 @@ def _year_features(df: pd.DataFrame, year: int) -> dict | None:
 # ── Main build ────────────────────────────────────────────────────────────────
 def build_features() -> pd.DataFrame:
     locations = pd.read_csv(_LOCATIONS_CSV)
-    # Coerce the bool column robustly (CSV stores "True"/"False" strings)
-    locations["weather_data_available"] = (
-        locations["weather_data_available"].astype(str).str.strip().str.lower() == "true"
-    )
-    available = locations[locations["weather_data_available"]].reset_index(drop=True)
+    if "weather_data_available" in locations.columns:
+        # Coerce the bool column robustly (CSV stores "True"/"False" strings)
+        locations["weather_data_available"] = (
+            locations["weather_data_available"].astype(str).str.strip().str.lower() == "true"
+        )
+        available = locations[locations["weather_data_available"]].reset_index(drop=True)
+    else:
+        available_ids = {p.stem for p in _RAW_DIR.glob("*.parquet")}
+        available = locations[locations["location_id"].isin(available_ids)].reset_index(drop=True)
 
     _INTERIM_DIR.mkdir(parents=True, exist_ok=True)
 

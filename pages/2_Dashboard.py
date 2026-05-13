@@ -263,8 +263,8 @@ st.markdown("---")
 st.markdown("### 5. AI Model Performance")
 st.markdown(
     "Evaluation metrics from training on 30+ years of Douro climate data. "
-    "Random Forest was selected for its higher ROC-AUC (0.974 vs 0.956). "
-    "Note: Logistic Regression has a better Brier score (0.071 vs 0.094), "
+    "Random Forest was selected for its higher ROC-AUC (0.970 vs 0.949). "
+    "Note: Logistic Regression has a better Brier score (0.071 vs 0.115), "
     "meaning it is better probability-calibrated — relevant context when interpreting premium outputs."
 )
 

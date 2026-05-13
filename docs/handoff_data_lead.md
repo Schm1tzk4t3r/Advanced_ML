@@ -3,7 +3,7 @@
 ## TL;DR
 
 - **Dataset is ready:** `data/processed/vinhaguard_dataset.parquet` (CSV mirror alongside it)
-- **960 rows × 21 columns** — one row per (vineyard location, year), 32 locations × 30 years (1995–2024)
+- **960 rows × 29 columns** — one row per (vineyard location, year), 32 locations × 30 years (1995–2024)
 - **Target column:** `climate_stress_year` — binary, **39.8% positive class**, well balanced out of the box
 - **Zero missing values**, zero QC drops; label validated against documented Iberian extreme years
 
@@ -12,7 +12,7 @@
 ## What's in the Dataset
 
 **File:** `data/processed/vinhaguard_dataset.parquet` (CSV mirror: `vinhaguard_dataset.csv`)  
-**Shape:** 960 rows × 21 columns — each row is one (location, year) observation.
+**Shape:** 960 rows × 29 columns — each row is one (location, year) observation.
 
 | Group | Column | Units | Meaning |
 |---|---|---|---|
@@ -36,6 +36,14 @@
 | | `summer_precip_mm` | mm | Total precipitation, June–August |
 | | `dry_days` | days | Days per year with precip < 1 mm |
 | | `max_consecutive_dry_days` | days | Longest dry spell (used in label rule) |
+| **TerraClimate water balance** | `tc_vpd_summer_mean` | kPa | Mean summer vapor pressure deficit |
+| | `tc_vpd_growing_mean` | kPa | Mean growing-season vapor pressure deficit |
+| | `tc_def_summer_sum` | mm | Summer climate water deficit |
+| | `tc_def_growing_sum` | mm | Growing-season climate water deficit |
+| | `tc_soil_summer_min` | mm | Minimum summer soil moisture |
+| | `tc_soil_growing_min` | mm | Minimum growing-season soil moisture |
+| | `tc_ppt_summer_sum` | mm | Summer precipitation |
+| | `tc_ppt_growing_sum` | mm | Growing-season precipitation |
 | **Target** | `climate_stress_year` | 0 / 1 | **1 = climate stress year. 39.8% positive.** |
 
 Full column definitions with source and derivation notes: `docs/data_dictionary.md`.
@@ -79,11 +87,11 @@ Cool/wet reference years (1999, 2002, 2008, 2014, 2019): all ≤ 3% stress. The 
 
 ## For Person 3 (ML & Pricing Lead)
 
-**Class balance:** 39.8% positive — no SMOTE or class-weight tricks needed; Logistic Regression and XGBoost will both train stably.
+**Class balance:** 39.8% positive — no SMOTE or class-weight tricks needed; Logistic Regression and Random Forest both train stably.
 
 **Suggested approach:**
 - Baseline: Logistic Regression on standardized features (`StandardScaler` on all numeric columns)
-- Main model: Random Forest or XGBoost (no scaling needed)
+- Main model: Random Forest (no scaling needed)
 - Don't train on both and test on the same years — use either a **chronological holdout** (e.g., train 1995–2019, test 2020–2024) or **stratified-by-subregion** splits to avoid leakage
 
 **Feature notes:**
@@ -150,10 +158,11 @@ Step 2 (fetch) takes ~5–15 minutes due to Open-Meteo rate limits. Steps 1, 3, 
 
 | File | Description |
 |---|---|
-| `data/locations.csv` | 36 Douro vineyard sites with subregion, coordinates, elevation, and `weather_data_available` flag |
+| `data/locations.csv` | 36 Douro vineyard sites with subregion, coordinates, and elevation |
 | `data/raw/weather/*.parquet` | 32 raw daily weather files (gitignored — re-run fetch to regenerate) |
 | `data/interim/features_by_location_year.parquet` | 960 rows × 20 engineered features, pre-labelling (gitignored) |
-| `data/processed/vinhaguard_dataset.parquet` | **Final ML dataset** — 960 rows × 21 columns including target |
+| `data/processed/terraclimate_features.parquet` | TerraClimate water-balance features — 960 rows × 10 columns |
+| `data/processed/vinhaguard_dataset.parquet` | **Final ML dataset** — 960 rows × 29 columns including target |
 | `data/processed/vinhaguard_dataset.csv` | CSV mirror of the above |
 | `src/data/locations.py` | Pipeline step 1 — generates locations.csv |
 | `src/data/fetch_weather.py` | Pipeline step 2 — fetches ERA5 weather via Open-Meteo |

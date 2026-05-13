@@ -2,7 +2,7 @@
 
 ## Overview
 
-This log documents how we used GenAI tools for the ML and pricing part of VinhaGuard AI. The scope was the Person 3 contribution: model training, evaluation, feature importance, premium logic, and the `predict_risk_and_premium()` backend used by the Streamlit app.
+This log documents how we used GenAI tools for the ML and pricing part of VinhaGuard AI. The scope was the Person 3 contribution: TerraClimate enrichment, model training, evaluation, feature importance, premium logic, and the `predict_risk_and_premium()` backend used by the Streamlit app.
 
 We used Codex/ChatGPT as a coding and review assistant. The tool helped inspect the repository, design the training workflow, write Python code, generate documentation drafts, and run verification checks. The final modelling choices, pricing assumptions, limitations, and acceptance of the implementation were reviewed by us.
 
@@ -11,6 +11,8 @@ We used Codex/ChatGPT as a coding and review assistant. The tool helped inspect 
 **Repository review.** Codex was asked to inspect the existing project structure, the data pipeline, the Streamlit app, and the project brief. This helped identify the main gap: the data pipeline was ready, but `model/predict.py` was still a mock backend and there was no trained model artifact.
 
 **Model pipeline implementation.** Codex helped write `model/train.py`, including the chronological holdout split, Logistic Regression baseline, Random Forest main model, metrics export, feature importance, and evaluation charts.
+
+**TerraClimate enrichment.** Codex helped research a practical additional dataset, implement `src/data/fetch_terraclimate.py`, extract a cached 1995-2024 Douro point dataset through TerraClimate OPeNDAP, and merge water-balance features into the canonical ML dataset.
 
 **Pricing backend implementation.** Codex helped replace the mock `predict_risk_and_premium()` function with a backend that loads the trained model artifacts, uses historical trigger rates, applies elevation-weighted comparable sites, estimates basis risk, and returns a transparent premium breakdown.
 
@@ -26,12 +28,14 @@ We used Codex/ChatGPT as a coding and review assistant. The tool helped inspect 
 - We used a **chronological split** (train 1995-2019, test 2020-2024) because it is more honest than a random split for a climate-risk problem.
 - We added a **GroupKFold by location** robustness check to test whether the model generalizes across vineyard sites.
 - We framed the target honestly as a **climate-trigger proxy**, not a real claims/loss label.
+- We added **TerraClimate water-balance features** (`vpd`, `def`, `soil`, `ppt`) because they are more physiologically meaningful for drought stress than rainfall counts alone, while still being public and reproducible.
 - We designed the quote-time backend so it does not pretend to know future weather. It estimates risk from historical trigger rates and model scores on comparable historical rows.
 - During final review, we corrected the heat payout trigger so the backend, dashboard, and FAQ use the same severe-event definition: at least 5 days above 38 C. This keeps the trigger close to the business case's ~8% severe-event calibration instead of pricing heat coverage from the broader climate-stress label.
 
 ## What Was Checked
 
 - `python -m model.train` runs and writes the model artifacts.
+- `python -m src.data.fetch_terraclimate` writes 960 location-year TerraClimate features with zero missing values.
 - `model/artifacts/risk_model.joblib` loads through `model/predict.py`.
 - `model/artifacts/metrics.json` contains both baseline and deployed-model metrics.
 - `docs/figures/` contains ROC, precision-recall, confusion matrix, calibration, and feature-importance charts.
@@ -49,6 +53,9 @@ We used Codex/ChatGPT as a coding and review assistant. The tool helped inspect 
 
 - `model/train.py`
 - `model/predict.py`
+- `src/data/fetch_terraclimate.py`
+- `data/processed/terraclimate_features.csv`
+- `data/processed/terraclimate_features.parquet`
 - `model/artifacts/risk_model.joblib`
 - `model/artifacts/metrics.json`
 - `model/artifacts/feature_importance.csv`
@@ -60,3 +67,4 @@ We used Codex/ChatGPT as a coding and review assistant. The tool helped inspect 
 - `docs/figures/ml_feature_importance.png`
 - `docs/figures/ml_calibration_curve.png`
 - `docs/ml_pricing_handoff.md`
+- `docs/terraclimate_enrichment.md`

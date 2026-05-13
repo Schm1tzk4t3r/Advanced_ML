@@ -16,5 +16,13 @@
   "annual_precip_mm",
   "summer_precip_mm",
   "dry_days",
-  "max_consecutive_dry_days"
+  "max_consecutive_dry_days",
+  "tc_vpd_summer_mean",
+  "tc_vpd_growing_mean",
+  "tc_def_summer_sum",
+  "tc_def_growing_sum",
+  "tc_soil_summer_min",
+  "tc_soil_growing_min",
+  "tc_ppt_summer_sum",
+  "tc_ppt_growing_sum"
 ]
