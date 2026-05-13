@@ -114,41 +114,39 @@ if submitted:
         col_left, col_right = st.columns([1, 2])
 
         with col_left:
-            st.markdown("<div class='result-card'>", unsafe_allow_html=True)
-
-            if risk_prob < 0.30:
-                risk_class = "risk-low"
-                risk_label = "LOW RISK"
-                risk_color = "#28A745"
-            elif risk_prob < 0.60:
-                risk_class = "risk-medium"
-                risk_label = "MEDIUM RISK"
-                risk_color = "#FFC107"
-            else:
-                risk_class = "risk-high"
-                risk_label = "HIGH RISK"
-                risk_color = "#DC3545"
-
-            st.markdown(f"<h3 style='margin-top: 0; color: {risk_color};'>{risk_prob:.0%}</h3>", unsafe_allow_html=True)
-            st.markdown(f"<p style='font-size: 0.95rem; color: {risk_color}; font-weight: bold; margin: 5px 0;'>{risk_label}</p>", unsafe_allow_html=True)
-            st.markdown("<p style='font-size: 0.85rem; color: #666; margin: 10px 0 0 0;'>Climate Stress Probability</p>", unsafe_allow_html=True)
-
-            st.progress(risk_prob)
-            st.markdown("</div>", unsafe_allow_html=True)
+            # Use Streamlit's native bordered container instead of HTML divs
+            with st.container(border=True):
+                if risk_prob < 0.30:
+                    risk_class = "risk-low"
+                    risk_label = "LOW RISK"
+                    risk_color = "#28A745"
+                elif risk_prob < 0.60:
+                    risk_class = "risk-medium"
+                    risk_label = "MEDIUM RISK"
+                    risk_color = "#FFC107"
+                else:
+                    risk_class = "risk-high"
+                    risk_label = "HIGH RISK"
+                    risk_color = "#DC3545"
+    
+                st.markdown(f"<h3 style='margin-top: 0; color: {risk_color};'>{risk_prob:.0%}</h3>", unsafe_allow_html=True)
+                st.markdown(f"<p style='font-size: 0.95rem; color: {risk_color}; font-weight: bold; margin: 5px 0;'>{risk_label}</p>", unsafe_allow_html=True)
+                st.markdown("<p style='font-size: 0.85rem; color: #666; margin: 10px 0 0 0;'>Climate Stress Probability</p>", unsafe_allow_html=True)
+    
+                st.progress(risk_prob)
 
         with col_right:
-            st.markdown("<div class='result-card'>", unsafe_allow_html=True)
-            st.markdown(f"**Trigger Condition:**")
-            st.markdown(f"> {trigger}")
-            st.caption(result["risk_profile_note"])
-
-            col_a, col_b = st.columns(2)
-            with col_a:
-                st.metric("Basis Risk", f"{basis_risk:.1f}%", help="Mismatch between trigger and actual loss")
-            with col_b:
-                st.metric("Premium %", f"{premium_eur / insured_value:.1%}", help="Annual premium as % of insured value")
-
-            st.markdown("</div>", unsafe_allow_html=True)
+            # Use Streamlit's native bordered container
+            with st.container(border=True):
+                st.markdown(f"**Trigger Condition:**")
+                st.markdown(f"> {trigger}")
+                st.caption(result["risk_profile_note"])
+    
+                col_a, col_b = st.columns(2)
+                with col_a:
+                    st.metric("Basis Risk", f"{basis_risk:.1f}%", help="Mismatch between trigger and actual loss")
+                with col_b:
+                    st.metric("Premium %", f"{premium_eur / insured_value:.1%}", help="Annual premium as % of insured value")
 
         # Premium card
         st.markdown(f"""
