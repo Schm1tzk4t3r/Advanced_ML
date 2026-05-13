@@ -1,9 +1,11 @@
 import os
 import sys
+from datetime import datetime
 
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import requests
 import streamlit as st
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
@@ -25,6 +27,35 @@ st.markdown(
         pointer-events: none;
         caret-color: transparent;
     }
+    .wx-card {
+        border: 2px solid;
+        border-radius: 10px;
+        padding: 14px 10px;
+        text-align: center;
+        margin-bottom: 8px;
+        min-height: 200px;
+    }
+    .wx-label { font-size: 0.75em; color: #666; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+    .wx-date  { font-size: 0.70em; color: #999; margin-bottom: 4px; }
+    .wx-icon  { font-size: 2.2em; line-height: 1.2; }
+    .wx-desc  { font-size: 0.80em; color: #444; margin-bottom: 6px; }
+    .wx-temp-max { font-size: 1.1em; font-weight: bold; color: #C62828; }
+    .wx-temp-min { font-size: 1.0em; color: #1565C0; }
+    .wx-precip   { font-size: 0.82em; color: #555; margin-top: 3px; }
+    .wx-badge    { font-size: 0.78em; font-weight: bold; margin-top: 6px; }
+    .trigger-card {
+        border: 2px solid;
+        border-radius: 10px;
+        padding: 14px;
+        text-align: center;
+        background: white;
+        margin-bottom: 8px;
+        min-height: 140px;
+    }
+    .trigger-icon   { font-size: 1.8em; }
+    .trigger-title  { font-size: 0.95em; font-weight: bold; margin: 4px 0; color: #222; }
+    .trigger-desc   { font-size: 0.78em; color: #666; line-height: 1.5; margin: 4px 0; }
+    .trigger-status { font-size: 0.85em; font-weight: bold; margin-top: 6px; }
 </style>
 """,
     unsafe_allow_html=True,
@@ -42,6 +73,111 @@ DISPLAY_SUBREGIONS = [
     "Regua",
     "Vila Nova de Foz Coa",
 ]
+
+# Centroid coordinates per sub-region (derived from locations.csv means)
+SUBREGION_COORDS = {
+    "Baixo Corgo":          {"lat": 41.136, "lon": -7.819},
+    "Cima Corgo":           {"lat": 41.188, "lon": -7.449},
+    "Douro Superior":       {"lat": 41.111, "lon": -7.060},
+    "Pinhao":               {"lat": 41.188, "lon": -7.449},
+    "Regua":                {"lat": 41.136, "lon": -7.819},
+    "Vila Nova de Foz Coa": {"lat": 41.111, "lon": -7.060},
+}
+
+# WMO Weather Interpretation Codes → (description, emoji)
+WMO_META: dict[int, tuple[str, str]] = {
+    0:  ("Clear sky",           "☀️"),
+    1:  ("Mainly clear",        "🌤️"),
+    2:  ("Partly cloudy",       "⛅"),
+    3:  ("Overcast",            "☁️"),
+    45: ("Fog",                 "🌫️"),
+    48: ("Icy fog",             "🌫️"),
+    51: ("Light drizzle",       "🌦️"),
+    53: ("Drizzle",             "🌦️"),
+    55: ("Heavy drizzle",       "🌧️"),
+    61: ("Light rain",          "🌧️"),
+    63: ("Rain",                "🌧️"),
+    65: ("Heavy rain",          "🌧️"),
+    71: ("Light snow",          "❄️"),
+    73: ("Snow",                "❄️"),
+    75: ("Heavy snow",          "❄️"),
+    77: ("Snow grains",         "❄️"),
+    80: ("Light showers",       "🌦️"),
+    81: ("Showers",             "🌧️"),
+    82: ("Heavy showers",       "⛈️"),
+    85: ("Snow showers",        "🌨️"),
+    86: ("Heavy snow showers",  "🌨️"),
+    95: ("Thunderstorm",        "⛈️"),
+    96: ("Thunderstorm + hail", "⛈️"),
+    99: ("Thunderstorm + hail", "⛈️"),
+}
+
+# Trigger thresholds (must match model/predict.py PRICING_CONFIG definitions)
+HEAT_TEMP_THRESH   = 38.0   # °C — a day counts as a heat day if max temp ≥ this
+FROST_TEMP_THRESH  = -2.0   # °C — a day counts as a frost day if min temp ≤ this
+DRY_MM_THRESH      =  1.0   # mm — below this = dry day
+HEAT_DAYS_TRIGGER  =  5     # seasonal threshold: ≥5 heat days → payout
+FROST_DAYS_TRIGGER =  3     # seasonal threshold: ≥3 frost days → payout
+
+
+@st.cache_data(ttl=1800)
+def _fetch_weather(lat: float, lon: float) -> dict | None:
+    """Fetch today + last 3 days of daily weather from Open-Meteo (no API key needed)."""
+    try:
+        r = requests.get(
+            "https://api.open-meteo.com/v1/forecast",
+            params={
+                "latitude":  lat,
+                "longitude": lon,
+                "daily": "temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode",
+                "past_days":     3,
+                "forecast_days": 1,
+                "timezone": "Europe/Lisbon",
+            },
+            timeout=10,
+        )
+        r.raise_for_status()
+        return r.json()
+    except Exception:
+        return None
+
+
+def _parse_weather_days(data: dict) -> list[dict]:
+    d = data["daily"]
+    rows = []
+    for i, date in enumerate(d["time"]):
+        max_t  = d["temperature_2m_max"][i]
+        min_t  = d["temperature_2m_min"][i]
+        precip = d["precipitation_sum"][i] or 0.0
+        rows.append({
+            "date":      date,
+            "max_temp":  max_t,
+            "min_temp":  min_t,
+            "precip":    precip,
+            "code":      d["weathercode"][i],
+            "heat_day":  max_t is not None and max_t >= HEAT_TEMP_THRESH,
+            "frost_day": min_t is not None and min_t <= FROST_TEMP_THRESH,
+            "dry_day":   precip < DRY_MM_THRESH,
+        })
+    return rows
+
+
+def _weather_trigger_summary(days: list[dict]) -> dict:
+    heat_n  = sum(1 for d in days if d["heat_day"])
+    frost_n = sum(1 for d in days if d["frost_day"])
+    consec_dry = 0
+    for d in reversed(days):
+        if d["dry_day"]:
+            consec_dry += 1
+        else:
+            break
+    return {
+        "heat_count":      heat_n,
+        "frost_count":     frost_n,
+        "consecutive_dry": consec_dry,
+        "heat_triggered":  heat_n  >= HEAT_DAYS_TRIGGER,
+        "frost_triggered": frost_n >= FROST_DAYS_TRIGGER,
+    }
 
 
 @st.cache_data
@@ -78,51 +214,176 @@ st.title("Climate Risk Dashboard")
 st.markdown("Historical analysis and model explainability for your selected region.")
 st.markdown("---")
 
-# ── Section 0 — Vineyard site map ─────────────────────────────────────────────
-st.markdown("### Vineyard Sites — Douro Valley")
-st.markdown(
-    "The vineyard sites across the three IVDP sub-regions "
-    "used to train the risk model. Bubble size = elevation (m a.s.l.)."
-)
+# ── Section: Live Weather Monitor ─────────────────────────────────────────────
+_wx_display = st.session_state.get("wx_location", list(SUBREGION_COORDS.keys())[1])
+st.markdown(f"### Live Weather Monitor — {_wx_display}")
 
-SR_COLORS_MAP = {
-    "Baixo Corgo": "#1976D2",
-    "Cima Corgo": "#F57C00",
-    "Douro Superior": "#C62828",
-}
+wx_col_loc, wx_col_info = st.columns([1, 3])
+with wx_col_loc:
+    wx_location = st.selectbox(
+        "Monitor location",
+        list(SUBREGION_COORDS.keys()),
+        index=1,
+        key="wx_location",
+    )
 
-if os.path.exists(LOCATIONS_PATH):
-    locs_df = pd.read_csv(LOCATIONS_PATH)
-    locs_df["elevation_display"] = locs_df["elevation_m"].apply(lambda e: f"{e} m")
-    locs_df["color"] = locs_df["subregion"].map(SR_COLORS_MAP)
+coords   = SUBREGION_COORDS[wx_location]
+wx_data  = _fetch_weather(coords["lat"], coords["lon"])
 
-    fig_map = px.scatter_map(
-        locs_df,
-        lat="latitude",
-        lon="longitude",
-        color="subregion",
-        size="elevation_m",
-        hover_name="name",
-        hover_data={"location_id": True, "elevation_display": True, "latitude": False, "longitude": False, "elevation_m": False},
-        color_discrete_map=SR_COLORS_MAP,
-        size_max=18,
-        zoom=8,
-        center={"lat": 41.15, "lon": -7.55},
-        height=420,
-        labels={"subregion": "IVDP Sub-region"},
-    )
-    fig_map.update_layout(
-        map_style="open-street-map",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        margin={"r": 0, "t": 0, "l": 0, "b": 0},
-    )
-    st.plotly_chart(fig_map, use_container_width=True)
-    st.caption(
-        f"{len(locs_df)} of 36 planned sites with complete ERA5 data. "
-        "Four sites (CC03, CC12, DS05, DS10) are absent due to API rate limits during data collection."
-    )
+if wx_data is None:
+    st.warning("Unable to fetch live weather data from Open-Meteo. Check your internet connection and try again.")
 else:
-    st.info("locations.csv not found — map unavailable.")
+    wx_days = _parse_weather_days(wx_data)
+    trig    = _weather_trigger_summary(wx_days)
+
+    with wx_col_info:
+        st.caption(
+            f"Data: [Open-Meteo](https://open-meteo.com) · "
+            f"Coordinates: {coords['lat']:.3f}°N, {abs(coords['lon']):.3f}°W · "
+            f"Retrieved: {datetime.now().strftime('%d %b %Y, %H:%M')} · Cached 30 min"
+        )
+
+    # ── Day cards (today + last 3 days) ───────────────────────────────────────
+    day_labels = ["3 Days Ago", "2 Days Ago", "Yesterday", "Today"]
+    day_cols   = st.columns(4)
+
+    for col, day, label in zip(day_cols, wx_days, day_labels):
+        with col:
+            desc, icon = WMO_META.get(day["code"], ("Unknown", "🌡️"))
+            date_str   = datetime.strptime(day["date"], "%Y-%m-%d").strftime("%b %d")
+            max_t = f"{day['max_temp']:.1f}°C" if day["max_temp"] is not None else "N/A"
+            min_t = f"{day['min_temp']:.1f}°C" if day["min_temp"] is not None else "N/A"
+
+            if day["heat_day"]:
+                card_color, bg = "#C62828", "#FFF5F5"
+                badge          = "Heat Day"
+            elif day["frost_day"]:
+                card_color, bg = "#1565C0", "#F0F4FF"
+                badge          = "Frost Day"
+            else:
+                card_color, bg = "#2E7D32", "#F5FFF5"
+                badge          = "Normal"
+
+            st.markdown(
+                f"""
+                <div class="wx-card" style="border-color:{card_color};background:{bg};">
+                    <div class="wx-label">{label}</div>
+                    <div class="wx-date">{date_str}</div>
+                    <div class="wx-icon">{icon}</div>
+                    <div class="wx-desc">{desc}</div>
+                    <div class="wx-temp-max">&#8593; {max_t}</div>
+                    <div class="wx-temp-min">&#8595; {min_t}</div>
+                    <div class="wx-precip">&#128167; {day['precip']:.1f} mm</div>
+                    <div class="wx-badge" style="color:{card_color};">{badge}</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+    st.markdown("<div style='margin-top:16px;'></div>", unsafe_allow_html=True)
+
+    # ── Trigger status cards ───────────────────────────────────────────────────
+    st.markdown("#### Insurance Trigger Status")
+
+    tc1, tc2, tc3 = st.columns(3)
+
+    with tc1:
+        heat_frac = trig["heat_count"] / HEAT_DAYS_TRIGGER
+        if trig["heat_triggered"]:
+            t_color, t_status = "#C62828", "PAYOUT TRIGGERED"
+        elif trig["heat_count"] > 0:
+            t_color  = "#F57C00"
+            t_status = f"Accumulating ({trig['heat_count']}/{HEAT_DAYS_TRIGGER} days)"
+        else:
+            t_color, t_status = "#2E7D32", "No trigger"
+        st.markdown(
+            f"""
+            <div class="trigger-card" style="border-color:{t_color};">
+                <div class="trigger-icon"></div>
+                <div class="trigger-title">Heat Trigger</div>
+                <div class="trigger-desc">Days &ge;38 &deg;C in window<br>
+                    {trig['heat_count']} of {HEAT_DAYS_TRIGGER} needed (seasonal)</div>
+                <div class="trigger-status" style="color:{t_color};">{t_status}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with tc2:
+        if trig["frost_triggered"]:
+            t_color, t_status = "#C62828", "PAYOUT TRIGGERED"
+        elif trig["frost_count"] > 0:
+            t_color  = "#1565C0"
+            t_status = f"Accumulating ({trig['frost_count']}/{FROST_DAYS_TRIGGER} days)"
+        else:
+            t_color, t_status = "#2E7D32", "No trigger"
+        st.markdown(
+            f"""
+            <div class="trigger-card" style="border-color:{t_color};">
+                <div class="trigger-icon"></div>
+                <div class="trigger-title">Frost Trigger</div>
+                <div class="trigger-desc">Days &le;-2 &deg;C in window<br>
+                    {trig['frost_count']} of {FROST_DAYS_TRIGGER} needed (seasonal)</div>
+                <div class="trigger-status" style="color:{t_color};">{t_status}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with tc3:
+        dry = trig["consecutive_dry"]
+        if dry >= 20:
+            d_color, d_status = "#C62828", "Drought Risk"
+        elif dry >= 7:
+            d_color, d_status = "#F57C00", "Dry Spell"
+        else:
+            d_color, d_status = "#2E7D32", "Normal"
+        st.markdown(
+            f"""
+            <div class="trigger-card" style="border-color:{d_color};">
+                <div class="trigger-icon"></div>
+                <div class="trigger-title">Drought Monitor</div>
+                <div class="trigger-desc">Consecutive dry days (&lt;1 mm/day)<br>
+                    {dry} day{"s" if dry != 1 else ""} (trigger: above 80th&nbsp;pct)</div>
+                <div class="trigger-status" style="color:{d_color};">{d_status}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    # ── Overall payout banner ──────────────────────────────────────────────────
+    any_triggered = trig["heat_triggered"] or trig["frost_triggered"]
+    any_warning   = trig["consecutive_dry"] >= 7 or trig["heat_count"] > 0 or trig["frost_count"] > 0
+
+    if any_triggered:
+        b_color, b_bg = "#C62828", "#FFF0F0"
+        b_text = (
+            "PAYOUT CONDITION MET — A trigger threshold has been reached "
+            "in the observed weather window. Policy review is recommended."
+        )
+    elif any_warning:
+        b_color, b_bg = "#F57C00", "#FFF8E1"
+        b_text = (
+            "ELEVATED RISK — Some trigger-relevant weather conditions observed. "
+            "Continue monitoring the forecast."
+        )
+    else:
+        b_color, b_bg = "#2E7D32", "#F1F8E9"
+        b_text = (
+            "CONDITIONS NORMAL — No trigger events detected in the recent "
+            "3-day weather window. All indicators within safe range."
+        )
+
+    st.markdown(
+        f"""
+        <div style="border-left:4px solid {b_color};background:{b_bg};
+                    padding:12px 16px;border-radius:4px;margin-top:12px;">
+            {b_text}
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
 
 st.markdown("---")
 
@@ -137,12 +398,6 @@ result = predict_risk_and_premium(selected_subregion, 12, 40_000, selected_risk_
 canonical_subregion = result["subregion_used"]
 sub_df = df[df["subregion"] == canonical_subregion].copy()
 
-# with col_info:
-#     st.info(result["risk_profile_note"])
-#     st.caption(
-#         f"Dashboard uses the richer model artifact: {len(sub_df):,} location-year rows "
-#         f"across {result['n_locations']} historical vineyard sites for this profile."
-#     )
 
 if sub_df.empty:
     st.warning("No model history is available for this risk profile.")
