@@ -79,9 +79,9 @@ st.markdown("Historical analysis and model explainability for your selected regi
 st.markdown("---")
 
 # ── Section 0 — Vineyard site map ─────────────────────────────────────────────
-st.markdown("### 0. Vineyard Sites — Douro Valley")
+st.markdown("### Vineyard Sites — Douro Valley")
 st.markdown(
-    "The 32 ERA5-calibrated vineyard sites across the three IVDP sub-regions "
+    "The vineyard sites across the three IVDP sub-regions "
     "used to train the risk model. Bubble size = elevation (m a.s.l.)."
 )
 
@@ -313,40 +313,6 @@ st.markdown(
 
 st.markdown("---")
 
-# Section 5 - Model performance figures
-st.markdown("### 5. AI Model Performance")
-st.markdown(
-    "Evaluation metrics from training on 30+ years of Douro climate data. "
-    "Random Forest was selected for its higher ROC-AUC (0.970 vs 0.949). "
-    "Note: Logistic Regression has a better Brier score (0.071 vs 0.115), "
-    "meaning it is better probability-calibrated — relevant context when interpreting premium outputs."
-)
-
-FIGURES_DIR = os.path.join(os.path.dirname(__file__), "..", "docs", "figures")
-
-fig_files = {
-    "ROC Curve": "ml_roc_curve.png",
-    "Precision-Recall": "ml_precision_recall_curve.png",
-    "Feature Importance": "ml_feature_importance.png",
-    "Calibration Curve": "ml_calibration_curve.png",
-    "Confusion Matrix": "ml_confusion_matrix.png",
-}
-
-available = {
-    label: os.path.join(FIGURES_DIR, fname)
-    for label, fname in fig_files.items()
-    if os.path.exists(os.path.join(FIGURES_DIR, fname))
-}
-
-if available:
-    tabs = st.tabs(list(available.keys()))
-    for tab, (label, path) in zip(tabs, available.items()):
-        with tab:
-            st.image(path, use_container_width=True)
-else:
-    st.info("Model figure files not found in docs/figures/.")
-
-st.markdown("---")
 st.info(
     "This dashboard uses historical climate-stress proxies, not farm-level claims. "
     "Actual triggers and losses depend on real climate events and farm-specific conditions."
