@@ -164,7 +164,7 @@ st.markdown("""
 st.markdown("""
 <div class="hero">
     <div class="hero-badge">Douro Valley · Portugal</div>
-    <h1>VinhaGuard AI</h1>
+    <h1>VinhaGuard</h1>
     <p>
         Parametric climate insurance built for Douro wine producers.
         Objective triggers, automatic payouts, and transparent pricing —
