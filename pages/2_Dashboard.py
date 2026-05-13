@@ -485,51 +485,51 @@ st.caption("Higher values indicate stronger influence on the model's risk rankin
 
 st.markdown("---")
 
-# Chart 3 - Trigger Alignment Diagnostic
-st.markdown("### 3. Trigger Alignment Diagnostic")
-st.markdown("How well does the selected trigger align with the broader climate-stress proxy?")
+# # Chart 3 - Trigger Alignment Diagnostic
+# st.markdown("### 3. Trigger Alignment Diagnostic")
+# st.markdown("How well does the selected trigger align with the broader climate-stress proxy?")
 
-col_scatter, col_explain = st.columns([2, 1])
+# col_scatter, col_explain = st.columns([2, 1])
 
-with col_scatter:
-    basis_df = year_df[["year", "triggered", "climate_stress_year", "model_stress_probability"]].copy()
-    basis_df.columns = ["Year", "Trigger Fired", "Climate Stress Year", "Model Stress Probability"]
-    basis_df["Match"] = basis_df["Trigger Fired"] == basis_df["Climate Stress Year"].astype(bool)
-    basis_df["Status"] = basis_df["Match"].map({True: "Match", False: "Mismatch (trigger ≠ stress proxy)"})
+# with col_scatter:
+#     basis_df = year_df[["year", "triggered", "climate_stress_year", "model_stress_probability"]].copy()
+#     basis_df.columns = ["Year", "Trigger Fired", "Climate Stress Year", "Model Stress Probability"]
+#     basis_df["Match"] = basis_df["Trigger Fired"] == basis_df["Climate Stress Year"].astype(bool)
+#     basis_df["Status"] = basis_df["Match"].map({True: "Match", False: "Mismatch (trigger ≠ stress proxy)"})
 
-    fig3 = px.scatter(
-        basis_df,
-        x="Year",
-        y="Trigger Fired",
-        color="Status",
-        color_discrete_map={"Match": BURGUNDY, "Mismatch (trigger ≠ stress proxy)": GOLD},
-        symbol="Climate Stress Year",
-        size="Model Stress Probability",
-        title=f"{selected_risk_type} Trigger vs Climate Stress Proxy",
-        height=350,
-    )
-    fig3.update_layout(hovermode="x unified", xaxis_tickangle=-45)
-    st.plotly_chart(fig3, use_container_width=True)
+#     fig3 = px.scatter(
+#         basis_df,
+#         x="Year",
+#         y="Trigger Fired",
+#         color="Status",
+#         color_discrete_map={"Match": BURGUNDY, "Mismatch (trigger ≠ stress proxy)": GOLD},
+#         symbol="Climate Stress Year",
+#         size="Model Stress Probability",
+#         title=f"{selected_risk_type} Trigger vs Climate Stress Proxy",
+#         height=350,
+#     )
+#     fig3.update_layout(hovermode="x unified", xaxis_tickangle=-45)
+#     st.plotly_chart(fig3, use_container_width=True)
 
-with col_explain:
-    st.markdown(
-        """
-**What does this chart show?**
+# with col_explain:
+#     st.markdown(
+#         """
+# **What does this chart show?**
 
-This diagnostic compares when the objective climate trigger fires
-against when the broader climate-stress proxy is active.
+# This diagnostic compares when the objective climate trigger fires
+# against when the broader climate-stress proxy is active.
 
-Mismatches (gold dots) indicate years where the two signals diverge.
-This is a **model-level diagnostic**, not a direct measure of basis risk:
-true basis risk measures the gap between the trigger and **actual farm losses**,
-which requires yield or claims data not yet available in this prototype.
-"""
-    )
+# Mismatches (gold dots) indicate years where the two signals diverge.
+# This is a **model-level diagnostic**, not a direct measure of basis risk:
+# true basis risk measures the gap between the trigger and **actual farm losses**,
+# which requires yield or claims data not yet available in this prototype.
+# """
+#     )
 
-st.markdown("---")
+# st.markdown("---")
 
 # Chart 4 - Premium Breakdown Donut
-st.markdown("### 4. Where Your Premium Goes")
+st.markdown("### 3. Where Your Premium Goes")
 
 pricing = result["pricing_breakdown"]
 labels = ["Expected Payout", "Risk Loading", "Admin Cost", "Margin"]
