@@ -138,7 +138,7 @@ def _subregion_profile_note(input_subregion: str, canonical_subregion: str) -> s
 
 def _normalise_risk_type(risk_type: str) -> str:
     cleaned = str(risk_type).strip().title()
-    if cleaned == "Heat + Frost":
+    if cleaned in ("Heat + Frost", "All"):
         cleaned = "Both"
     if cleaned not in PRICING_CONFIG:
         raise ValueError(f"Unknown risk_type '{risk_type}'. Expected Heat, Frost, Drought, or Both.")

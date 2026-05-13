@@ -171,7 +171,7 @@ st.markdown(
     "Ask anything about VinhaGuard — coverage, pricing, triggers, "
     "basis risk, or how the AI model works."
 )
-st.markdown("---")
+st.markdown("")
 
 client = get_client()
 

@@ -19,6 +19,10 @@ st.markdown(
         padding: 20px;
         margin-bottom: 20px;
     }
+    div[data-baseweb="select"] input {
+        pointer-events: none;
+        caret-color: transparent;
+    }
 </style>
 """,
     unsafe_allow_html=True,
@@ -76,19 +80,19 @@ col_select, col_risk, col_info = st.columns([1, 1, 2])
 with col_select:
     selected_subregion = st.selectbox("Select Demo Location / Risk Region", DISPLAY_SUBREGIONS)
 with col_risk:
-    selected_risk_type = st.selectbox("Risk Type", ["Heat", "Frost", "Drought", "Both"])
+    selected_risk_type = st.selectbox("Risk Type", ["Heat", "Frost", "Drought", "All"])
 
 df = load_history()
 result = predict_risk_and_premium(selected_subregion, 12, 40_000, selected_risk_type)
 canonical_subregion = result["subregion_used"]
 sub_df = df[df["subregion"] == canonical_subregion].copy()
 
-with col_info:
-    st.info(result["risk_profile_note"])
-    st.caption(
-        f"Dashboard uses the richer model artifact: {len(sub_df):,} location-year rows "
-        f"across {result['n_locations']} historical vineyard sites for this profile."
-    )
+# with col_info:
+#     st.info(result["risk_profile_note"])
+#     st.caption(
+#         f"Dashboard uses the richer model artifact: {len(sub_df):,} location-year rows "
+#         f"across {result['n_locations']} historical vineyard sites for this profile."
+#     )
 
 if sub_df.empty:
     st.warning("No model history is available for this risk profile.")
@@ -107,7 +111,7 @@ RISK_CHART_CONFIG = {
     "Heat":    {"col": "heat_days_38",            "trigger_col": "heat_trigger",    "threshold": 5,    "y_label": "Average heat days >= 38 C",             "title": "Annual Heat Days >= 38 C"},
     "Frost":   {"col": "spring_severe_frost_days", "trigger_col": "frost_trigger",   "threshold": 3,    "y_label": "Average severe frost days (spring)",    "title": "Annual Severe Frost Days (Spring)"},
     "Drought": {"col": "max_consecutive_dry_days", "trigger_col": "drought_trigger", "threshold": None, "y_label": "Average max consecutive dry days",      "title": "Annual Max Consecutive Dry Days"},
-    "Both":    {"col": "climate_stress_year",      "trigger_col": "any_trigger",     "threshold": None, "y_label": "Share of sites with any climate stress", "title": "Annual Combined Climate Stress (Heat / Frost / Drought)"},
+    "All":    {"col": "climate_stress_year",      "trigger_col": "any_trigger",     "threshold": None, "y_label": "Share of sites with any climate stress", "title": "Annual Combined Climate Stress (Heat / Frost / Drought)"},
 }
 chart_cfg = RISK_CHART_CONFIG[selected_risk_type]
 

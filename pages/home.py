@@ -176,7 +176,7 @@ st.markdown("""
 # ── Key stats ─────────────────────────────────────────────────────────────────
 c1, c2, c3, c4 = st.columns(4)
 stats = [
-    ("3 + 3",  "Risk Profiles + Demo Places", "Three IVDP profiles plus familiar locations"),
+    ("3 + 3",  "Risk Profiles + Demo Places", "3 IVDP profiles + familiar locations"),
     ("< 72h",  "Payout Speed",          "Triggered by climate data"),
     ("30 +",   "Years of Data",         "Historical Douro climate records"),
     ("AI",     "Risk Modelling",        "Logistic Regression + Random Forest"),
