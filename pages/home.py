@@ -177,7 +177,7 @@ st.markdown("""
 c1, c2, c3, c4 = st.columns(4)
 stats = [
     ("3 + 3",  "Risk Profiles + Demo Places", "3 IVDP profiles + familiar locations"),
-    ("< 72h",  "Payout Speed",          "Triggered by climate data"),
+    ("< 72h",  "Payout Speed",          "Target — via insurer partner"),
     ("30 +",   "Years of Data",         "Historical Douro climate records"),
     ("AI",     "Risk Modelling",        "Logistic Regression + Random Forest"),
 ]
@@ -206,7 +206,7 @@ with col_left:
         </div>
         <div class="feature-item">
             <strong>Automatic Payouts</strong>
-            <span>Payment begins within 72 hours of trigger confirmation. No claims forms.</span>
+            <span>Target payout within 72 hours of trigger confirmation (via insurer partner). No claims forms.</span>
         </div>
         <div class="feature-item">
             <strong>Transparent Pricing</strong>
@@ -242,7 +242,7 @@ steps = [
     ("01", "Enter Details",      "Sub-region, vineyard area, crop value, and your preferred risk coverage type."),
     ("02", "Get a Quote",         "AI risk model analyzes 30+ years of Douro climate data and returns a tailored premium."),
     ("03", "Activate Coverage",   "Select your trigger threshold and confirm your annual premium to start coverage."),
-    ("04", "Automatic Payout",    "Trigger fires — payment within 72 hours. No claims. No friction. No delays."),
+    ("04", "Automatic Payout",    "Trigger fires — target payout within 72 hours via insurer partner (design target, not a guaranteed SLA). No claims forms. No friction."),
 ]
 cols = st.columns(4)
 for col, (num, title, desc) in zip(cols, steps):

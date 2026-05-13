@@ -53,6 +53,8 @@ The main holdout is chronological:
 
 This is harder and more honest than a random split because the test set contains recent high-stress climate years. The script also reports GroupKFold ROC-AUC by `location_id` to test whether the model generalizes across vineyard sites instead of memorizing one location.
 
+**Test-set class imbalance caveat:** The holdout years 2020–2024 are climatically extreme (2022 = 100% of sites stressed; 2023/2024 = 94% stressed). As a result the test-set positive-class share is **71.9%** — substantially higher than the full dataset (39.8%). Metrics that depend on the class distribution — particularly precision — are therefore optimistic estimates of real-world performance in an average year. The known-year validation (all five documented extreme years correctly identified as stressed) is the more meaningful real-world check for model correctness. The GroupKFold cross-validation provides the more stable estimate of generalisation performance.
+
 Important framing for the presentation:
 
 The model is best described as a **climate-trigger risk model**. Since the target itself is derived from weather indicators, the model demonstrates that the engineered indicators recover stress-year logic and can produce a useful risk score. At quote time, the app cannot know next season's weather, so the pricing backend estimates future trigger probability from historical climatology and elevation-weighted comparable sites.
@@ -84,9 +86,12 @@ Chronological holdout, trained on 1995-2019 and tested on 2020-2024:
 | Model | ROC-AUC | PR-AUC | Brier | Accuracy | Precision | Recall | F1 |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | Logistic Regression | 0.949 | 0.984 | 0.071 | 0.913 | 0.963 | 0.913 | 0.938 |
-| Random Forest | 0.970 | 0.986 | 0.115 | 0.881 | 0.971 | 0.861 | 0.912 |
+| Random Forest (uncalibrated) | 0.970 | 0.986 | 0.115 | 0.881 | 0.971 | 0.861 | 0.912 |
+| **Random Forest (calibrated, isotonic)** | **0.977** | **0.986** | **0.042** | **0.944** | **0.934** | **0.991** | **0.962** |
 
-Random Forest was selected as the deployed model because it gives the strongest ranking performance on the recent chronological holdout and captures non-linear interactions between drought, heat, frost, and geography. Logistic Regression remains a strong baseline and has the better Brier score, which should be mentioned honestly if discussing calibration.
+The deployed model is a **CalibratedClassifierCV (isotonic regression)** wrapping the Random Forest. Isotonic calibration corrected the RF's probability over-dispersion, reducing the Brier score from 0.115 to **0.042** — lower than Logistic Regression's 0.071. Well-calibrated probabilities are essential for the pricing backend because `expected_payout = insured_value × risk_prob × loss_given_trigger`; an inflated or deflated risk_prob directly misprices the product.
+
+The calibration chart (`docs/figures/ml_calibration_curve.png`) shows the before/after comparison. The deployed model uses `CalibratedClassifierCV(cv=5)` refitted on the full 960-row dataset.
 
 Additional robustness check:
 
@@ -127,7 +132,7 @@ Supported risk types:
 - `Heat`
 - `Frost`
 - `Drought`
-- `Both`
+- `All` (combined heat + frost + drought; the backend also accepts the legacy alias `Both` for backwards compatibility)
 
 The model has three canonical IVDP risk profiles. For a friendlier demo, the UI also shows familiar place labels. These are mapped transparently to the three profiles:
 

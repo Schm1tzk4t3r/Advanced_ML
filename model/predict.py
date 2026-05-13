@@ -4,6 +4,29 @@ The Streamlit app imports ``predict_risk_and_premium`` from this module. The
 function keeps the original public signature, but the implementation now uses
 the trained model artifact and historical trigger data produced by
 ``python -m model.train``.
+
+Risk probability blending (70/30):
+    At quote time the user has not observed next season's weather. The backend
+    therefore cannot feed current-year climate features into the model. Instead
+    it estimates trigger probability from two sources:
+
+        risk_prob = 0.70 * historical_trigger_rate
+                  + 0.30 * model_stress_probability
+
+    The 70-weight on the historical rate anchors the estimate to directly
+    observed trigger frequencies in the 30-year record — the most defensible
+    basis for premium pricing. The 30-weight on the model component allows
+    elevation-weighted comparable sites to modulate the baseline, capturing
+    sub-location climate gradients that a flat historical average would miss.
+    The 70/30 split is a design choice; a production product would derive the
+    optimal blend weight from out-of-sample calibration against claims data.
+
+Calibration:
+    The deployed model is a CalibratedClassifierCV (isotonic, cv=5) wrapping
+    a Random Forest. This corrects the RF's tendency to push probabilities
+    toward 0 and 1, reducing the Brier score from 0.115 to 0.042 — lower even
+    than the Logistic Regression baseline (0.071). Well-calibrated probabilities
+    matter for premium pricing because expected_payout = IV × risk_prob × LGT.
 """
 
 from __future__ import annotations
@@ -75,7 +98,7 @@ PRICING_CONFIG: dict[str, PricingConfig] = {
         per_hectare_admin_eur=2.0,
         trigger_threshold="Dry-spell length above the vineyard's historical 80th percentile",
     ),
-    "Both": PricingConfig(
+    "All": PricingConfig(
         loss_given_trigger=0.55,
         base_risk_loading=0.30,
         admin_margin=0.15,
@@ -138,10 +161,10 @@ def _subregion_profile_note(input_subregion: str, canonical_subregion: str) -> s
 
 def _normalise_risk_type(risk_type: str) -> str:
     cleaned = str(risk_type).strip().title()
-    if cleaned in ("Heat + Frost", "All"):
-        cleaned = "Both"
+    if cleaned in ("Heat + Frost", "Both"):
+        cleaned = "All"
     if cleaned not in PRICING_CONFIG:
-        raise ValueError(f"Unknown risk_type '{risk_type}'. Expected Heat, Frost, Drought, or Both.")
+        raise ValueError(f"Unknown risk_type '{risk_type}'. Expected Heat, Frost, Drought, or All.")
     return cleaned
 
 
@@ -211,7 +234,7 @@ def _risk_components(history: pd.DataFrame, weights: np.ndarray, risk_type: str)
     elif risk_type == "Drought":
         historical = drought_history
         model_component = stress_model
-    else:
+    else:  # "All" — combined heat + frost + drought
         historical = stress_history
         model_component = stress_model
 

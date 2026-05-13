@@ -9,6 +9,8 @@ import streamlit as st
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from model.predict import predict_risk_and_premium
 
+LOCATIONS_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "locations.csv")
+
 st.markdown(
     """
 <style>
@@ -74,6 +76,54 @@ def load_history():
 
 st.title("Climate Risk Dashboard")
 st.markdown("Historical analysis and model explainability for your selected region.")
+st.markdown("---")
+
+# ── Section 0 — Vineyard site map ─────────────────────────────────────────────
+st.markdown("### 0. Vineyard Sites — Douro Valley")
+st.markdown(
+    "The 32 ERA5-calibrated vineyard sites across the three IVDP sub-regions "
+    "used to train the risk model. Bubble size = elevation (m a.s.l.)."
+)
+
+SR_COLORS_MAP = {
+    "Baixo Corgo": "#1976D2",
+    "Cima Corgo": "#F57C00",
+    "Douro Superior": "#C62828",
+}
+
+if os.path.exists(LOCATIONS_PATH):
+    locs_df = pd.read_csv(LOCATIONS_PATH)
+    locs_df["elevation_display"] = locs_df["elevation_m"].apply(lambda e: f"{e} m")
+    locs_df["color"] = locs_df["subregion"].map(SR_COLORS_MAP)
+
+    fig_map = px.scatter_map(
+        locs_df,
+        lat="latitude",
+        lon="longitude",
+        color="subregion",
+        size="elevation_m",
+        hover_name="name",
+        hover_data={"location_id": True, "elevation_display": True, "latitude": False, "longitude": False, "elevation_m": False},
+        color_discrete_map=SR_COLORS_MAP,
+        size_max=18,
+        zoom=8,
+        center={"lat": 41.15, "lon": -7.55},
+        height=420,
+        labels={"subregion": "IVDP Sub-region"},
+    )
+    fig_map.update_layout(
+        map_style="open-street-map",
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        margin={"r": 0, "t": 0, "l": 0, "b": 0},
+    )
+    st.plotly_chart(fig_map, use_container_width=True)
+    st.caption(
+        f"{len(locs_df)} of 36 planned sites with complete ERA5 data. "
+        "Four sites (CC03, CC12, DS05, DS10) are absent due to API rate limits during data collection."
+    )
+else:
+    st.info("locations.csv not found — map unavailable.")
+
 st.markdown("---")
 
 col_select, col_risk, col_info = st.columns([1, 1, 2])

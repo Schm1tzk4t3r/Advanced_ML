@@ -45,7 +45,7 @@ Parametric insurance asks "Did climate conditions hit the agreed trigger?" and p
 
 Key terms:
 • Trigger: The specific climate condition that activates the payout (e.g., 5 heat days above 38 °C)
-• Payout speed: < 72 hours after trigger confirmation — no claim forms needed
+• Payout speed: < 72 hours after trigger confirmation (target, subject to insurer integration) — no claim forms needed
 • Basis risk: The unavoidable gap between when the trigger fires and when the farmer
   actually suffers a loss. VinhaGuard discloses this honestly (typically 8–22%).
 
@@ -70,7 +70,7 @@ Users can select from 6 Douro sub-regions, but there are 3 distinct risk profile
               Expected loss if triggered: 40 % of insured value
   • Drought:  Dry-spell length above the vineyard's historical 80th percentile
               Expected loss if triggered: 45 % of insured value
-  • Both/Combined: Heat, frost, or drought trigger fires
+  • All (Combined): Heat, frost, or drought trigger fires
               Expected loss if triggered: 55 % of insured value
               Risk loading: 30 % (higher due to multiple hazards)
 
@@ -97,9 +97,16 @@ Premium breakdown (approximate):
     summer precipitation, dry days, maximum consecutive dry days, and TerraClimate
     water-balance features (VPD, climate water deficit, soil moisture, precipitation)
   • Models trained:
-      ─ Logistic Regression: ROC AUC 0.949, F1 0.938 on chronological holdout
-      ─ Random Forest:       ROC AUC 0.970, F1 0.912 on chronological holdout
+      ─ Logistic Regression:              ROC AUC 0.949, Brier 0.071, F1 0.938
+      ─ Random Forest (uncalibrated):     ROC AUC 0.970, Brier 0.115, F1 0.912
+      ─ Random Forest (calibrated — deployed): ROC AUC 0.977, Brier 0.042, F1 0.962
+  • The deployed model is a calibrated Random Forest (isotonic regression via
+    CalibratedClassifierCV). Calibration corrects probability estimates so that
+    a stated 15% risk really reflects ~15% historical frequency — essential for
+    fair premium pricing.
   • Split: chronological holdout (train 1995–2019, test 2020–2024) — no data leakage
+    Note: test years 2020–2024 are climatically extreme (positive rate 71.9% vs
+    39.8% overall), so precision metrics are optimistic for average years.
   • Cross-validation: Group K-Fold by location, mean ROC AUC 0.937 ± 0.055
   • At quote time: predictions are based on historical climatology, not future
     weather forecasts (the season has not happened yet)
@@ -116,10 +123,10 @@ closely the trigger threshold matches the farmer's actual microclimate.
 Higher elevation divergence from the regional median increases basis risk.
 VinhaGuard discloses basis risk on every quote — we do not hide it.
 
-── Payment & Cancellation ───────────────────
-  • Payout: Trigger fires → 72-hour processing → funds deposited to bank account
-  • Cancellation: Any time, pro-rated refund for unused coverage days
-  • No lock-in, no penalties, no minimum term
+── Payment ──────────────────────────────────
+  • Payout: Trigger fires → target 72-hour processing → funds transferred via insurer partner
+  • Actual payout timeline is defined in the policy with the insurer partner; 72 hours is a design target, not a guaranteed SLA
+  • Cancellation and refund terms are set by the insurer partner — VinhaGuard does not define these unilaterally
 
 ── Limitations (always be honest) ──────────
   • This is an academic prototype — not a licensed insurance product

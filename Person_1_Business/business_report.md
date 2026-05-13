@@ -38,7 +38,7 @@ Known cool and wet years (1999, 2002, 2008, 2014, 2019) register ≤ 3% of sites
 
 ## 2. Target Customers and Market Logic
 
-**Primary customers:** Small and medium-sized wine producers in the Douro Valley — particularly family farms and cooperative members. The region counts approximately **20,000 farmers** with an average holding of ~2 hectares (Trigo & Silva, 2022). This group combines high climate exposure with limited financial reserves.
+**Primary customers:** Small and medium-sized wine producers in the Douro Valley — particularly family farms and cooperative members. The region counts approximately **19,000–21,000 registered vine-growers**, predominantly with holdings of 1–3 hectares (IVV, 2023; IVDP, 2022). This group combines high climate exposure with limited financial reserves.
 
 The risk model reveals a clear sub-regional exposure gradient. Importantly, the probabilities below reflect the prototype's **climate stress classification** — a composite label capturing whether a year was anomalous for that location. The actual insurance payout trigger is calibrated more narrowly to severe events (see Section 3):
 
@@ -152,11 +152,24 @@ VinhaGuard AI operates as a **hybrid SaaS + insurance distribution layer**, not 
 | Assumption | MVP value | Note |
 |---|---|---|
 | Product type | Fixed-payout smallholder policy | EUR 5,000 payout on trigger breach |
-| Calibrated trigger probability | ~8–12% per year | Severe events only — not the full stress classification rate |
-| Loss Given Trigger | 55% | Avg. fraction of insured value lost when trigger fires |
-| Risk Loading | 25% | Insurer buffer for uncertainty and reinsurance |
+| Heat trigger probability | 3–20% per year (sub-region-specific) | See table below — Douro Superior is materially higher than Baixo/Cima Corgo |
+| Drought trigger probability | ~20% per year (all sub-regions) | Drought is the most frequently triggered hazard |
+| Loss Given Trigger | 50–55% | Per hazard type — 50% heat, 40% frost, 45% drought, 55% combined |
+| Risk Loading | 25–30% | 25% single-hazard; 30% combined |
 | Admin Margin | 15% | Platform and operational costs |
 | Basis-risk indicator | 8–22% (dynamic) | Estimated from subregion coverage depth and elevation distance from median |
+
+### Actual Historical Trigger Rates by Sub-region
+
+The backend computes the following from 30 years of ERA5 trigger diagnostics (`heat_days_38 ≥ 5`, `spring_severe_frost_days ≥ 3`, and the per-location 80th-percentile drought threshold):
+
+| Sub-region | Heat trigger | Frost trigger | Drought trigger | Combined stress |
+|---|---|---|---|---|
+| Baixo Corgo | **3.1%** | 4.2% | 20.8% | 40.6% |
+| Cima Corgo | **6.7%** | 8.3% | 20.8% | 41.4% |
+| Douro Superior | **19.6%** | 4.2% | 20.4% | 36.3% |
+
+**Critical observation:** The heat trigger rate is not uniform across sub-regions. The earlier assumption of "~8–12% calibrated trigger probability" is approximately correct only for Cima Corgo heat. Baixo Corgo heat fires in just 3.1% of years (producing affordable premiums), while Douro Superior heat fires in 19.6% of years — materially above the 12% upper bound cited in earlier drafts. This has direct implications for the affordability of heat coverage in the highest-exposure sub-region. Drought is the most frequently triggered hazard across all three sub-regions and drives the higher combined-product premiums.
 
 ### MVP Premium Formula
 
@@ -169,22 +182,23 @@ Admin Cost     = EUR 50 (platform fee) + EUR 2 × Vineyard Area (ha)
 Annual Premium = (Expected Loss + Risk Loading + Admin Cost) × (1 + Admin Margin)
 ```
 
-### Smallholder Product — Illustrative Example
+### Smallholder Product — Sub-regional Premium Examples (EUR 5,000 payout, 12 ha)
 
-| Input | Value |
-|---|---|
-| Fixed payout on trigger | EUR 5,000 |
-| Calibrated trigger probability | 8% (severe heat event) |
-| Expected payout cost | EUR 220 (= 5,000 × 8% × 55%) |
-| Risk Loading (25%) | EUR 55 |
-| Admin Margin (15%) | EUR 41 |
-| **Formula-based premium** | **EUR 316** |
-| *(Fixed admin cost EUR 50 + EUR 2/ha excluded from this example for simplicity)* | |
-| **Commercial pilot price** | **EUR 550** |
+The table below shows actual backend outputs from `predict_risk_and_premium()` — not illustrative assumptions. Premium figures use the trained calibrated Random Forest model blended 70/30 with the actual historical trigger rates shown above.
 
-**Why the range EUR 316–550:** The formula at 8% trigger probability produces EUR 316. The EUR 550 commercial figure used in the revenue model reflects a rounded pilot price that incorporates frost and drought coverage add-ons (which modestly raise the effective trigger probability), conservative onboarding and support buffers, and standard rounding for smallholder policy pricing. Both figures are illustrative assumptions pending actuarial validation.
+| Sub-region | Heat | Frost | Drought | All (combined) |
+|---|---|---|---|---|
+| Baixo Corgo | **EUR 242** (risk ~4%) | EUR 169 (risk ~3%) | EUR 911 (risk ~25%) | EUR 1,553 (risk ~35%) |
+| Cima Corgo | **EUR 413** (risk ~9%) | EUR 323 (risk ~8%) | EUR 987 (risk ~28%) | EUR 1,817 (risk ~42%) |
+| Douro Superior | **EUR 1,006** (risk ~25%) | EUR 162 (risk ~3%) | EUR 957 (risk ~26%) | EUR 1,609 (risk ~36%) |
 
-A premium in the EUR 316–550 range represents **6–11% of the insured payout value** — plausible for a smallholder parametric product. This is very different from full crop-value insurance: the product provides a defined liquidity buffer, not total loss coverage.
+**Affordability context:**
+- Heat-only coverage at EUR 242–413 (BC and CC) represents **5–8% of the EUR 5,000 payout value** — affordable for a smallholder liquidity product.
+- Heat-only coverage for Douro Superior at EUR 1,006 represents **20% of payout value** — significantly less affordable. The pilot should test whether Douro Superior producers, who have the highest exposure and lowest cash reserves, can sustain this premium. If not, a lower payout amount (e.g., EUR 2,500) or a higher trigger threshold (e.g., 8+ days above 38°C) would reduce the heat trigger rate and bring the premium to EUR 500–600.
+- Drought premiums (~EUR 900–990) are broadly similar across sub-regions because the drought trigger fires at ~20% frequency everywhere. These premiums are at the high end of affordability for a EUR 5,000 payout.
+- Combined "All" coverage (EUR 1,553–1,817) represents 31–36% of payout value and is likely too expensive for a smallholder MVP.
+
+**Revised commercial pilot framing:** Rather than a single EUR 550 average premium, the pilot product menu should be positioned as a heat-only tier (EUR 242–413 for BC/CC, reviewed separately for DS) as the affordable entry product, with frost and drought as optional add-ons priced to the customer's specific sub-region and elevation.
 
 **Note on correlated risk:** Agricultural climate risks are often correlated — in an extreme year such as 2022 (100% of Douro sites stressed), many producers would trigger payouts simultaneously. This is precisely why VinhaGuard AI does not carry underwriting risk: the insurer partner manages the correlated loss exposure through reinsurance.
 
@@ -192,7 +206,7 @@ A premium in the EUR 316–550 range represents **6–11% of the insured payout 
 
 ### Platform Revenue and Break-even
 
-Using the smallholder product (EUR 550 average premium) and 12% GWP commission:
+Using a heat-only product with a conservative EUR 400 average blended premium (reflecting a mix of sub-regions and a downward-adjusted DS heat price) and 12% GWP commission. The earlier EUR 550 figure assumed a single flat trigger probability; the sub-region-specific premium table above implies a lower affordable entry-product average for the pilot cohort.
 
 **Scenario A — Student project baseline (EUR 80,000 fixed costs)**
 
@@ -371,8 +385,12 @@ All premium recommendations show the full formula and inputs. The system logs mo
 
 Gouveia, C., Liberato, M. L. R., DaCamara, C. C., Trigo, R. M., & Ramos, A. M. (2011). Modelling past and future wine production in the Portuguese Douro Valley. *Climate Research*, 48, 349–362.
 
+Instituto da Vinha e do Vinho (IVV). (2023). *Vinhos e Aguardentes de Portugal — Anuário 2023*. Ministério da Agricultura. Retrieved from https://www.ivv.gov.pt
+
+Instituto dos Vinhos do Douro e do Porto (IVDP). (2022). *Região Demarcada do Douro: Dados Estatísticos*. Retrieved from https://www.ivdp.pt
+
 Jones, G. V., & Alves, F. (2012). Impacts of climate change on wine production: A global overview and regional assessment in the Douro Valley of Portugal. *International Journal of Global Warming*, 4(3/4), 383–406.
 
 Santos, J. A., Ceglar, A., Toreti, A., & Prodhomme, C. (2020). Performance of seasonal forecasts of Douro and Port wine production. *Agricultural and Forest Meteorology*, 291, 108095.
 
-Trigo, A., & Silva, P. (2022). Sustainable development directions for wine tourism in Douro Wine Region, Portugal. *Sustainability*, 14(7), 3949.
+Trigo, A., & Silva, P. (2022). Sustainable development directions for wine tourism in Douro Wine Region, Portugal. *Sustainability*, 14(7), 3949. *(Note: cited for wine-tourism context; farm structure statistics draw on IVV 2023 and IVDP 2022.)*

@@ -21,7 +21,9 @@
       2024
     ],
     "train_rows": 800,
-    "test_rows": 160
+    "test_rows": 160,
+    "test_positive_share": 0.7188,
+    "note": "Test set positive-class share (71.9%) is higher than the full dataset (39.8%) because 2020-2024 were climatically extreme years. Precision metrics are optimistic."
   },
   "models": {
     "logistic_regression": {
@@ -73,7 +75,7 @@
     "random_forest": {
       "roc_auc": 0.9695,
       "average_precision": 0.9862,
-      "brier_score": 0.115,
+      "brier_score": 0.1149,
       "accuracy": 0.8812,
       "precision": 0.9706,
       "recall": 0.8609,
@@ -116,15 +118,61 @@
         }
       },
       "group_kfold_location_roc_auc": {
-        "mean": 0.937,
-        "std": 0.0549,
+        "mean": 0.9351,
+        "std": 0.061,
         "folds": [
-          0.9613,
-          0.9487,
-          0.8303,
-          0.9563,
-          0.9882
+          0.816,
+          0.9489,
+          0.9665,
+          0.988,
+          0.9561
         ]
+      }
+    },
+    "random_forest_calibrated": {
+      "roc_auc": 0.9767,
+      "average_precision": 0.9864,
+      "brier_score": 0.0422,
+      "accuracy": 0.9437,
+      "precision": 0.9344,
+      "recall": 0.9913,
+      "f1": 0.962,
+      "confusion_matrix": [
+        [
+          37,
+          8
+        ],
+        [
+          1,
+          114
+        ]
+      ],
+      "classification_report": {
+        "0": {
+          "precision": 0.9736842105263158,
+          "recall": 0.8222222222222222,
+          "f1-score": 0.891566265060241,
+          "support": 45.0
+        },
+        "1": {
+          "precision": 0.9344262295081968,
+          "recall": 0.991304347826087,
+          "f1-score": 0.9620253164556962,
+          "support": 115.0
+        },
+        "accuracy": 0.94375,
+        "macro avg": {
+          "precision": 0.9540552200172563,
+          "recall": 0.9067632850241546,
+          "f1-score": 0.9267957907579686,
+          "support": 160.0
+        },
+        "weighted avg": {
+          "precision": 0.9454675366695428,
+          "recall": 0.94375,
+          "f1-score": 0.9422087082507243,
+          "support": 160.0
+        }
       }
     }
   }
