@@ -46,15 +46,15 @@ streamlit run app.py
 
 | Component | Status |
 |---|---|
-| ERA5 climate dataset (32 sites × 30 years, 960 rows × 21 cols) | ✅ Implemented |
-| 20-feature engineering pipeline | ✅ Implemented |
+| ERA5 + TerraClimate dataset (32 sites × 30 years, 960 rows × 29 cols) | ✅ Implemented |
+| Weather + water-balance feature engineering pipeline | ✅ Implemented |
 | Climate stress classification (rule-based, per-location percentiles) | ✅ Implemented |
 | Premium calculator (matching `pages/3_Pricing_Explainer.py`) | ✅ Implemented |
 | Streamlit app — 4 pages: Risk, Dashboard, Pricing, Chatbot | ✅ Implemented |
 | Portuguese-language interface | ✅ Implemented |
-| Trained ML risk model (LR / XGBoost) | ⏳ In development — Person 3 |
-| Risk probability outputs | 🔄 Mock placeholder (`model/predict.py`) |
-| Basis-risk estimation | 🔄 Hardcoded prototype (12.5%) |
+| Trained ML risk model (LR / Random Forest) | ✅ Implemented — Person 3 |
+| Risk probability outputs | ✅ Person 3's trained classifier |
+| Basis-risk estimation | ✅ Dynamic prototype diagnostic (8–22%) — actuarial calibration pending |
 | Live seasonal trigger monitoring | 🔄 Simulated in demo |
 | Insurer payout integration | 🔄 Future partner integration |
 | Real payout execution | 🔄 Future partner integration |
@@ -94,12 +94,12 @@ A **vineyard-specific climate-risk pricing and monitoring layer** that pays out 
 |---|---|
 | **Real problem** | 39.8% of Douro location-years are climate stress years; 2022 = 100% sites stressed; smallholders lack fast post-shock liquidity |
 | **AI necessity** | Per-location percentile calibration reduces basis risk; trigger probability must be distinguished from raw stress rate to produce viable premiums; rule-based thresholds alone create systematic unfairness |
-| **Deployable solution** | Streamlit app running (4 pages); real ERA5 dataset (960 rows); pricing engine implemented; mock model awaiting Person 3 classifier |
+| **Deployable solution** | Streamlit app running (4 pages); real ERA5 + TerraClimate dataset (960 rows); pricing engine implemented; trained ML model (LR/Random Forest) integrated by Person 3 |
 | **Unit economics** | Platform break-even at ~833 producers; EUR 550 avg premium; 12% commission + EUR 50 fee; insurer carries underwriting risk separately |
 | **Moat** | Localized Douro calibration data; trigger-performance history over time; insurer/cooperative workflow integration; domain-specific explainability |
 | **Safety / privacy** | Human underwriting approval required; LLM cannot modify policy terms; basis-risk disclosed in app; data minimisation; no free-form payout promises |
 | **Transparency** | Full premium formula visible to user; all model inputs logged; basis-risk indicator shown alongside every result |
-| **Honesty about limits** | Mock model clearly labelled; basis-risk indicator is a prototype placeholder; insurer partnership required; payout execution is future integration |
+| **Honesty about limits** | Basis-risk indicator is a model diagnostic, not an actuarial estimate; insurer partnership required; payout execution is future integration |
 
 ---
 

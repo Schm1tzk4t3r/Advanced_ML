@@ -3,6 +3,7 @@ Pipeline step 4 — label climate stress years and write the final ML dataset.
 
 Reads:
     data/interim/features_by_location_year.parquet
+    data/processed/terraclimate_features.parquet   (optional enrichment)
 
 Writes:
     data/processed/vinhaguard_dataset.parquet
@@ -23,6 +24,7 @@ import pandas as pd
 _REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]
 _INPUT = _REPO_ROOT / "data" / "interim" / "features_by_location_year.parquet"
 _OUT_DIR = _REPO_ROOT / "data" / "processed"
+_TERRACLIMATE_FEATURES = _OUT_DIR / "terraclimate_features.parquet"
 _OUT_PARQUET = _OUT_DIR / "vinhaguard_dataset.parquet"
 _OUT_CSV = _OUT_DIR / "vinhaguard_dataset.csv"
 
@@ -77,6 +79,32 @@ def label_stress_year(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def add_terraclimate_features(df: pd.DataFrame) -> pd.DataFrame:
+    """Merge optional TerraClimate water-balance features into the ML dataset."""
+    if not _TERRACLIMATE_FEATURES.exists():
+        print("TerraClimate features not found; writing weather-only dataset.")
+        return df
+
+    tc = pd.read_parquet(_TERRACLIMATE_FEATURES)
+    required = {"location_id", "year"}
+    missing = sorted(required.difference(tc.columns))
+    if missing:
+        raise ValueError(f"TerraClimate feature file is missing required columns: {missing}")
+
+    before_rows = len(df)
+    out = df.merge(tc, on=["location_id", "year"], how="left", validate="one_to_one")
+    if len(out) != before_rows:
+        raise ValueError("TerraClimate merge changed the number of dataset rows.")
+
+    tc_cols = [c for c in tc.columns if c not in required]
+    missing_values = int(out[tc_cols].isna().sum().sum())
+    if missing_values:
+        raise ValueError(f"TerraClimate merge introduced {missing_values} missing feature values.")
+
+    print(f"Added {len(tc_cols)} TerraClimate water-balance features.")
+    return out
+
+
 # ── Console summary ───────────────────────────────────────────────────────────
 def _print_summary(df: pd.DataFrame) -> None:
     total = len(df)
@@ -111,10 +139,22 @@ def _print_summary(df: pd.DataFrame) -> None:
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 def main() -> None:
-    df = pd.read_parquet(_INPUT)
-    print(f"Loaded {len(df):,} rows from {_INPUT.name}")
+    if _INPUT.exists():
+        df = pd.read_parquet(_INPUT)
+        print(f"Loaded {len(df):,} rows from {_INPUT.name}")
+    elif _OUT_CSV.exists():
+        df = pd.read_csv(_OUT_CSV)
+        tc_cols = [c for c in df.columns if c.startswith("tc_")]
+        drop_cols = ["climate_stress_year", *tc_cols]
+        df = df.drop(columns=[c for c in drop_cols if c in df.columns])
+        print(f"Loaded {len(df):,} rows from existing {_OUT_CSV.name} because interim features are absent")
+    else:
+        raise FileNotFoundError(
+            f"Missing {_INPUT}. Run 'python -m src.data.build_features' first."
+        )
 
     df = label_stress_year(df)
+    df = add_terraclimate_features(df)
 
     _OUT_DIR.mkdir(parents=True, exist_ok=True)
     df.to_parquet(_OUT_PARQUET, index=False)

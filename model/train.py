@@ -15,6 +15,9 @@ from pathlib import Path
 from typing import Any
 
 import joblib
+import matplotlib
+
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -65,6 +68,14 @@ NUMERIC_FEATURES = [
     "summer_precip_mm",
     "dry_days",
     "max_consecutive_dry_days",
+    "tc_vpd_summer_mean",
+    "tc_vpd_growing_mean",
+    "tc_def_summer_sum",
+    "tc_def_growing_sum",
+    "tc_soil_summer_min",
+    "tc_soil_growing_min",
+    "tc_ppt_summer_sum",
+    "tc_ppt_growing_sum",
 ]
 FEATURE_COLUMNS = CATEGORICAL_FEATURES + NUMERIC_FEATURES
 

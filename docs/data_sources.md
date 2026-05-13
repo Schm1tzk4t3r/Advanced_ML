@@ -53,7 +53,41 @@ ERA5 is the fifth generation ECMWF global atmospheric reanalysis, covering 1940 
 
 ---
 
-## 3. IVDP — Instituto dos Vinhos do Douro e do Porto
+## 3. TerraClimate
+
+**Role in pipeline:** Water-balance enrichment. Called by `src/data/fetch_terraclimate.py`.
+
+TerraClimate provides monthly global climate and climatic water-balance data at
+approximately 1/24 degree spatial resolution. VinhaGuard uses it to add
+physiologically meaningful drought indicators that are not captured by simple
+daily rainfall counts alone.
+
+| Field | Value |
+|---|---|
+| Provider | Climatology Lab / University of California Merced |
+| Dataset page | https://www.climatologylab.org/terraclimate.html |
+| Variable guide | https://www.climatologylab.org/terraclimate-variables.html |
+| THREDDS/OPeNDAP archive | http://thredds.northwestknowledge.net:8080/thredds/catalog/TERRACLIMATE_ALL/data/catalog.html |
+| Variables used | `vpd`, `def`, `soil`, `ppt` |
+| Temporal resolution | Monthly |
+| Period used | 1995-01 – 2024-12 |
+| Spatial resolution | ~4 km |
+
+**Citation:**
+
+> Abatzoglou, J. T., Dobrowski, S. Z., Parks, S. A., & Hegewisch, K. C. (2018).
+> TerraClimate, a high-resolution global dataset of monthly climate and climatic
+> water balance from 1958-2015. *Scientific Data*, 5, 170191.
+> https://doi.org/10.1038/sdata.2017.191
+
+**Usage notes:** The script does not download global files. It reads the nearest
+TerraClimate grid cell for each project vineyard location through OPeNDAP,
+caches each variable-year extraction under `data/raw/terraclimate/`, then writes
+annual ML-ready features to `data/processed/terraclimate_features.parquet`.
+
+---
+
+## 4. IVDP — Instituto dos Vinhos do Douro e do Porto
 
 **Role in pipeline:** Authority for sub-region definitions used in `data/locations.csv` and throughout the dataset.
 
@@ -70,7 +104,7 @@ The 36 vineyard site coordinates in `data/locations.csv` were hand-curated to re
 
 ---
 
-## 4. IPMA — Instituto Português do Mar e da Atmosfera
+## 5. IPMA — Instituto Português do Mar e da Atmosfera
 
 **Role in pipeline:** Portuguese national meteorological authority. Used as an independent reference for data validation and for contextualising known extreme years (2003, 2005, 2017, 2022).
 
@@ -115,7 +149,14 @@ not within-cell vineyard heterogeneity. This constitutes a source of
 **basis risk** for the parametric insurance product: trigger conditions may be
 met or missed at the data-grid level while actual farm-level conditions differ.
 
-### 3. NDVI / Sentinel-2 intentionally scoped out
+### 3. TerraClimate grid resolution
+
+TerraClimate adds useful drought physiology signals, but it is still gridded
+data, not direct vineyard observations. Soil moisture and water deficit are
+estimated at grid-cell scale and do not capture plot-level terrace structure,
+irrigation, vine age, rootstock, canopy management, or local soil depth.
+
+### 4. NDVI / Sentinel-2 intentionally scoped out
 
 Normalised Difference Vegetation Index (NDVI) derived from Sentinel-2
 multispectral imagery was identified as a valuable additional feature for
@@ -124,7 +165,7 @@ was intentionally excluded from the MVP due to time constraints. NDVI
 integration (via the Copernicus Data Space Ecosystem or Google Earth Engine)
 is on the project roadmap.
 
-### 4. Synthetic placeholder in data/processed/
+### 5. Synthetic placeholder in data/processed/
 
 `data/processed/douro_climate.parquet` is **not** part of the production
 pipeline. It is an earlier synthetic dataset (6 sub-regions × 34 years,
