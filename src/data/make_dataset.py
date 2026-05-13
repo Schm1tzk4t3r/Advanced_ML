@@ -9,8 +9,8 @@ Writes:
     data/processed/vinhaguard_dataset.parquet
     data/processed/vinhaguard_dataset.csv
 
-The synthetic placeholder data/processed/douro_climate.parquet (used by the
-Streamlit demo) is left untouched — new files are written alongside it.
+The older demo archive at data/processed/douro_climate.parquet is left
+untouched; new production-ready files are written alongside it.
 
 Run:
     python -m src.data.make_dataset
@@ -53,7 +53,7 @@ def label_stress_year(df: pd.DataFrame) -> pd.DataFrame:
     meaningful signal for parametric insurance trigger calibration.
 
     **Tuning:**
-    All threshold logic lives in this single function.  Person 3 (ML Lead) can
+    All threshold logic lives in this single function. The ML workflow can
     adjust the percentile cutoffs or add conditions here without touching the
     rest of the pipeline.
     """

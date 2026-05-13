@@ -1,8 +1,8 @@
 """Train and evaluate the VinhaGuard climate-stress risk model.
 
-This script is the Person 3 / ML Lead deliverable. It trains a transparent
-baseline and a stronger tree model, writes evaluation charts, and saves the
-production inference artifact used by ``model.predict``.
+This script trains a transparent baseline and a stronger tree model, writes
+evaluation charts, and saves the production inference artifact used by
+``model.predict``.
 
 Run from the repository root:
     python -m model.train

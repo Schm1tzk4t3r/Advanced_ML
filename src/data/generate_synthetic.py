@@ -1,6 +1,6 @@
 """
-Run this script once to generate douro_climate.parquet from synthetic data.
-Replace with Person 2's real dataset when available.
+Run this script only to regenerate the legacy synthetic demo archive.
+The production pipeline uses data/processed/vinhaguard_dataset.parquet.
 
 Expected schema:
     year        int   1990–2023

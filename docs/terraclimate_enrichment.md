@@ -101,10 +101,11 @@ Current chronological holdout metrics:
 |---|---:|---:|---:|---:|---:|---:|---:|
 | Logistic Regression | 0.949 | 0.984 | 0.071 | 0.913 | 0.963 | 0.913 | 0.938 |
 | Random Forest | 0.970 | 0.986 | 0.115 | 0.881 | 0.971 | 0.861 | 0.912 |
+| Random Forest, calibrated | 0.977 | 0.986 | 0.042 | 0.944 | 0.934 | 0.991 | 0.962 |
 
-Random Forest remains the deployed model because it has the stronger ranking
-performance. Logistic Regression remains better calibrated by Brier score, which
-should be mentioned honestly if discussing premium calibration.
+The calibrated Random Forest remains the deployed model because it combines the
+Random Forest's strong ranking performance with a better Brier score for pricing.
+The uncalibrated Random Forest remains useful for feature-importance diagnostics.
 
 Top feature drivers still start with the original trigger logic, as expected,
 because the target is a climate-trigger proxy. Importantly,

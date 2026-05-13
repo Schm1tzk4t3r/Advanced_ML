@@ -1,4 +1,4 @@
-# VinhaGuard AI - ML and Pricing Handoff
+# VinhaGuard AI - ML and Pricing Methodology
 
 ## Scope
 
@@ -86,12 +86,14 @@ Chronological holdout, trained on 1995-2019 and tested on 2020-2024:
 | Model | ROC-AUC | PR-AUC | Brier | Accuracy | Precision | Recall | F1 |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | Logistic Regression | 0.949 | 0.984 | 0.071 | 0.913 | 0.963 | 0.913 | 0.938 |
-| Random Forest (uncalibrated) | 0.970 | 0.986 | 0.115 | 0.881 | 0.971 | 0.861 | 0.912 |
-| **Random Forest (calibrated, isotonic)** | **0.977** | **0.986** | **0.042** | **0.944** | **0.934** | **0.991** | **0.962** |
+| Random Forest | 0.970 | 0.986 | 0.115 | 0.881 | 0.971 | 0.861 | 0.912 |
+| **Random Forest, calibrated** | **0.977** | **0.986** | **0.042** | **0.944** | **0.934** | **0.991** | **0.962** |
 
-The deployed model is a **CalibratedClassifierCV (isotonic regression)** wrapping the Random Forest. Isotonic calibration corrected the RF's probability over-dispersion, reducing the Brier score from 0.115 to **0.042** — lower than Logistic Regression's 0.071. Well-calibrated probabilities are essential for the pricing backend because `expected_payout = insured_value × risk_prob × loss_given_trigger`; an inflated or deflated risk_prob directly misprices the product.
-
-The calibration chart (`docs/figures/ml_calibration_curve.png`) shows the before/after comparison. The deployed model uses `CalibratedClassifierCV(cv=5)` refitted on the full 960-row dataset.
+The deployed artifact is the calibrated Random Forest. The uncalibrated Random
+Forest remains useful for ranking and feature-importance diagnostics, while
+isotonic calibration improves the Brier score from 0.115 to 0.042. This matters
+because the pricing backend uses risk probability as an input to expected
+payout.
 
 Additional robustness check:
 
